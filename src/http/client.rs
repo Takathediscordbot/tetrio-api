@@ -1,4 +1,6 @@
 use crate::http::value_bound_query::ValueBoundQuery;
+use crate::models::packet::Packet;
+use crate::models::streams::league_stream::LeagueStream;
 use serde::de::DeserializeOwned;
 
 pub const TETRIO_API_URL: &str = "https://ch.tetr.io/api/";
@@ -282,10 +284,49 @@ pub async fn fetch_xp_leaderboard(query: ValueBoundQuery) -> anyhow::Result<XpPa
     make_tetrio_api_request(format!("users/lists/xp{}", query.as_query_string())).await
 }
 
+
+
 use crate::models::streams::stream::StreamPacket;
+/// # Examples
+/// ```
+/// use tetrio_api::http::{client, value_bound_query::ValueBoundQuery};
+/// # tokio_test::block_on(async {
+/// let packet = client::fetch_stream("blitz_userbest_619aaa04dbc55fb324bf4459").await.unwrap();
+/// 
+/// assert!(packet.success && packet.data.is_some() && packet.error.is_none());
+/// 
+/// let stream_data = packet.data.unwrap();
+/// 
+/// // Streams don't have an official documentation
+/// // so I can't provide datatypes for that, you'll have to experiment and parse the data yourself
+/// dbg!(stream_data);
+/// # });
+/// ```
 pub async fn fetch_stream(stream: &str) -> anyhow::Result<StreamPacket> {
     make_tetrio_api_request(format!("streams/{stream}")).await
 }
+
+/// ## WARNING THIS ATTEMPTS TO CONVERT TO A TYPE THAT IS NOT OFFICIALLY SUPPORTED
+/// ## IT HAS A HIGH CHANCE OF FAILING DUE TO API CHANGES
+/// # Examples
+/// ```
+/// use tetrio_api::http::{client, value_bound_query::ValueBoundQuery};
+/// # tokio_test::block_on(async {
+/// let packet = client::fetch_tetra_league_recent("619aaa04dbc55fb324bf4459").await.unwrap();
+/// 
+/// assert!(packet.success && packet.data.is_some() && packet.error.is_none());
+/// 
+/// let stream_data = packet.data.unwrap();
+/// 
+/// // Streams don't have an official documentation
+/// // so I can't provide datatypes for that, you'll have to experiment and parse the data yourself
+/// dbg!(stream_data);
+/// # });
+/// ```
+pub async fn fetch_tetra_league_recent(user_id: &str) -> anyhow::Result<Packet<LeagueStream>> {
+    make_tetrio_api_request(format!("streams/league_userrecent_{user_id}")).await
+}
+
 
 use crate::models::news::news::NewsPacket;
 pub async fn fetch_news(limit: Option<i64>) -> anyhow::Result<NewsPacket> {
