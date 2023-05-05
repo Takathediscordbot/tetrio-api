@@ -3,83 +3,83 @@ use serde::{Serialize, Deserialize};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LeagueEndContextUser {
     #[serde(rename = "_id")]
-    id: String,
-    username: String
+    pub id: String,
+    pub username: String
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LeagueEndContextHandling {
-    arr: f64,
-    das: f64,
-    dcd: f64,
-    sdf: f64,
-    safelock: bool,
-    cancel: bool
+    pub arr: f64,
+    pub das: f64,
+    pub dcd: f64,
+    pub sdf: f64,
+    pub safelock: bool,
+    pub cancel: bool
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LeagueEndContextPointExtra {
-    vs: f64
+    pub vs: f64
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LeagueEndContextPointExtraTracking {
     #[serde(rename = "aggregatestats___vsscore")]
-    aggregate_stats_vs_score: Vec<f64>
+    pub aggregate_stats_vs_score: Vec<f64>
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LeagueEndContextPoints {
-    primary: i32,
-    secondary: f64,
-    tertiary: f64,
-    extra: LeagueEndContextPointExtra,
+    pub primary: i32,
+    pub secondary: f64,
+    pub tertiary: f64,
+    pub extra: LeagueEndContextPointExtra,
     #[serde(rename = "secondaryAvgTracking")]
-    secondary_avg_tracking: Vec<f64>,
+    pub secondary_avg_tracking: Vec<f64>,
     #[serde(rename = "tertiaryAvgTracking")]
-    tertiary_avg_tracking: Vec<f64>,
+    pub tertiary_avg_tracking: Vec<f64>,
     #[serde(rename = "extraAvgTracking")]
-    extra_avg_tracking: LeagueEndContextPointExtraTracking,
+    pub extra_avg_tracking: LeagueEndContextPointExtraTracking,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LeagueEndContext {
-    user: LeagueEndContextUser,
-    handling: LeagueEndContextHandling,
-    active: bool,
-    success: bool,
-    inputs: i32,
+    pub user: LeagueEndContextUser,
+    pub handling: LeagueEndContextHandling,
+    pub active: bool,
+    pub success: bool,
+    pub inputs: i32,
     #[serde(rename = "piecesplaced")]
-    pieces_placed: i32,
+    pub pieces_placed: i32,
     #[serde(rename = "naturalorder")]
-    natural_order: f32,
-    score: i32,
-    wins: i32,
-    points: LeagueEndContextPoints
+    pub natural_order: f32,
+    pub score: i32,
+    pub wins: i32,
+    pub points: LeagueEndContextPoints
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-struct LeagueStreamUser {
+pub struct LeagueStreamUser {
     #[serde(rename = "_id")]
-    id: String,
-    username: String
+    pub id: String,
+    pub username: String
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LeagueStreamRecords {
     #[serde(rename = "_id")]
-    id: String,
-    endcontext: Vec<LeagueEndContext>,
+    pub id: String,
+    pub endcontext: Vec<LeagueEndContext>,
     #[serde(rename = "ismulti")]
-    is_multi: bool,
+    pub is_multi: bool,
     #[serde(rename = "replayid")]
-    replay_id: String,
-    stream: String,
-    ts: String,
-    user: LeagueStreamUser
+    pub replay_id: String,
+    pub stream: String,
+    pub ts: String,
+    pub user: LeagueStreamUser
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LeagueStream {
-    records: Vec<LeagueStreamRecords>
+    pub records: Vec<LeagueStreamRecords>
 }
