@@ -112,7 +112,7 @@ mod tests {
         let fetched = client::fetch_league_leaderboard(
             ValueBoundQuery::Before { before: ordered_float::OrderedFloat(22000.5), limit: None, country: None }
         ).await;
-        assert!((&fetched).is_ok());
+        assert!(fetched.is_ok());
         if let Ok(user) = fetched {
             if let Some(_user) = user.into_success() {
             }

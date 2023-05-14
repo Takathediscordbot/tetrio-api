@@ -37,3 +37,28 @@ pub enum UserRank {
     #[serde(rename = "z")]
     Z,
 }
+
+impl std::fmt::Display for UserRank {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            UserRank::X => f.write_str("X"),
+            UserRank::U => f.write_str("U"),
+            UserRank::SS => f.write_str("SS"),
+            UserRank::SPlus => f.write_str("S+"),
+            UserRank::S => f.write_str("S"),
+            UserRank::SMinus => f.write_str("S-"),
+            UserRank::APlus => f.write_str("A+"),
+            UserRank::A => f.write_str("A"),
+            UserRank::AMinus => f.write_str("A-"),
+            UserRank::BPlus => f.write_str("B+"),
+            UserRank::B => f.write_str("B"),
+            UserRank::BMinus => f.write_str("B-"),
+            UserRank::CPlus => f.write_str("C+"),
+            UserRank::C => f.write_str("C"),
+            UserRank::CMinus => f.write_str("C-"),
+            UserRank::DPlus => f.write_str("D+"),
+            UserRank::D => f.write_str("D"),
+            UserRank::Z => f.write_str("Z"),
+        }
+    }
+}
