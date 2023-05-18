@@ -45,7 +45,7 @@ pub struct UserInfoUser {
     pub gametime: f64,
     pub country: Option<String>,
     pub badstanding: Option<bool>,
-    pub supporter: bool,
+    pub supporter: Option<bool>,
     pub supporter_tier: i64,
     pub verified: bool,
     pub league: UserInfoLeague,
