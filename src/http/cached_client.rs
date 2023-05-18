@@ -61,7 +61,7 @@ impl CachedClient {
     /// use tetrio_api::http::cached_client::CachedClient;
     /// # tokio_test::block_on(async {
     /// let client = CachedClient::default();
-    /// let packet = client.fetch_user_info("takathedinosaur").await.unwrap(); // Returns an Arc
+    /// let packet = client.fetch_user_info("promooooooo").await.unwrap(); // Returns an Arc
     /// 
     /// assert!(packet.success && packet.data.is_some() && packet.error.is_none());
     /// 

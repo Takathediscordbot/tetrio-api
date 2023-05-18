@@ -4,5 +4,5 @@ use serde::{Deserialize, Serialize};
 pub struct UserBadge {
     pub id: String, 
     pub label: String,
-    pub ts: Option<String>
+    pub ts: Option<serde_json::Value>
 }
