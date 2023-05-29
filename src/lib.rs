@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 pub mod http;
-mod models;
+pub mod models;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right
