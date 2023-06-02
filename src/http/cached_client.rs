@@ -292,13 +292,12 @@ impl CachedClient {
     /// use tetrio_api::http::cached_client::CachedClient;
     /// # tokio_test::block_on(async {
     /// let client = CachedClient::default();
-    /// let packet = client.fetch_full_league_leaderboard(Some("fr".to_string())).await.unwrap();
+    /// let packet = client.fetch_full_league_leaderboard(Some("fr")).await.unwrap();
     /// 
     /// assert!(packet.success && packet.data.is_some() && packet.error.is_none());
     /// 
     /// let league_data = packet.data.as_ref().unwrap();
     /// 
-    /// dbg!(league_data.users.len());
     /// # });
     /// ```
     pub async fn fetch_full_league_leaderboard(
