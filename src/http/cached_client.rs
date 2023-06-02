@@ -9,6 +9,8 @@ use super::value_bound_query::ValueBoundQuery;
 use crate::models::news::latest::{LatestNewsPacket};
 use crate::models::news::news::{NewsPacket};
 
+use crate::models::packet::Packet;
+use crate::models::streams::league_stream::LeagueStream;
 use crate::models::streams::stream::{StreamPacket};
 use crate::models::users::lists::league::{LeaguePacket};
 use crate::models::users::lists::league_full::{LeagueFullPacket};
@@ -25,6 +27,7 @@ pub struct CachedClient {
     xp_leaderboard_cache: Cache<ValueBoundQuery, Arc<XpPacket>>,
     league_leaderboard_cache: Cache<ValueBoundQuery, Arc<LeaguePacket>>,
     stream_cache: Cache<String, Arc<StreamPacket>>,
+    league_stream_cache: Cache<String, Arc<Packet<LeagueStream>>>,
     news_cache: Cache<Option<i64>, Arc<NewsPacket>>,
     latest_news_cache: Cache<(String, Option<i64>), Arc<LatestNewsPacket>>,
 }
@@ -40,7 +43,8 @@ impl Default for CachedClient {
             full_league_leaderboard_cache: Cache::builder().time_to_live(Duration::from_secs(3600)).build(),
             stream_cache: Cache::builder().time_to_live(Duration::from_secs(60)).build(),
             news_cache: Cache::builder().time_to_live(Duration::from_secs(60)).build(),
-            latest_news_cache: Cache::builder().time_to_live(Duration::from_secs(60)).build()
+            latest_news_cache: Cache::builder().time_to_live(Duration::from_secs(60)).build(),
+            league_stream_cache: Cache::builder().time_to_live(Duration::from_secs(60)).build()
         }
     }
 }
@@ -494,4 +498,23 @@ impl CachedClient {
         
         Ok(data)
     }
+
+    pub async fn fetch_tetra_league_recent(&self, user_id: &str) -> anyhow::Result<Arc<Packet<LeagueStream>>> {
+        if let Some(data) = self.league_stream_cache.get(user_id) {
+            return Ok(Arc::clone(&data));
+        }
+
+        let data = Self::make_tetrio_api_request(format!("streams/league_userrecent_{user_id}")).await;
+        let result = data.map(Arc::new);
+        let Ok(data) = result else {
+            return result;
+        };
+
+        if data.is_success() {
+            self.league_stream_cache.insert(user_id.to_owned(), Arc::clone(&data)).await;
+        }
+        
+        Ok(data)
+    }
+    
 }
