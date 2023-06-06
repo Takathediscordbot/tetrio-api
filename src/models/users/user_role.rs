@@ -16,4 +16,6 @@ pub enum UserRole {
     Banned,
     #[serde(rename = "halfmod")]
     HalfMod,
+    #[serde(rename = "sysop")]
+    SysOp,
 }
