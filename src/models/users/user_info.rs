@@ -13,7 +13,7 @@ pub struct UserInfoLeague {
     pub gameswon: i64,
     pub rating: f64,
     pub rank: UserRank,
-    pub bestrank: UserRank,
+    pub bestrank: Option<UserRank>,
     pub standing: i64,
     pub standing_local: i64,
     pub next_rank: Option<UserRank>,

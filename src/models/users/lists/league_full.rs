@@ -9,7 +9,7 @@ pub struct LeagueFullData {
     pub gameswon: i64,
     pub rating: f64,
     pub rank: UserRank,
-    pub bestrank: UserRank,
+    pub bestrank: Option<UserRank>,
     pub glicko: Option<f64>,
     pub rd: Option<f64>,
     pub apm: Option<f64>,
