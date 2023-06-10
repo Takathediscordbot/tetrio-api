@@ -44,7 +44,7 @@ use crate::models::users::user_info::UserInfoPacket;
 /// # });
 /// ```
 pub async fn fetch_user_info(user: &str) -> anyhow::Result<UserInfoPacket> {
-    make_tetrio_api_request(format!("users/{user}")).await
+    make_tetrio_api_request(format!("users/{}", user.to_lowercase())).await
 }
 
 use crate::models::users::user_records::UserRecordsPacket;
@@ -78,7 +78,7 @@ use crate::models::users::user_records::UserRecordsPacket;
 /// # });
 /// ```
 pub async fn fetch_user_records(user: &str) -> anyhow::Result<UserRecordsPacket> {
-    make_tetrio_api_request(format!("users/{user}/records")).await
+    make_tetrio_api_request(format!("users/{}/records", user.to_lowercase())).await
 }
 
 use crate::models::users::user_search::UserSearchPacket;
@@ -203,7 +203,7 @@ pub async fn fetch_full_league_leaderboard(
     country: Option<String>,
 ) -> anyhow::Result<LeagueFullPacket> {
     let query_string = if let Some(country) = country {
-        format!("?country={country}")
+        format!("?country={}", country.to_uppercase())
     } else {
         String::new()
     };

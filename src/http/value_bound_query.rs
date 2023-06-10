@@ -32,7 +32,7 @@ impl ValueBoundQuery {
                 };
 
                 if let Some(country) = country {
-                    result += format!("&country={country}").as_str();
+                    result += format!("&country={}", country.to_uppercase()).as_str();
                 }
 
                 result

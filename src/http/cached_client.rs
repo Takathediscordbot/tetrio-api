@@ -89,7 +89,8 @@ impl CachedClient {
     /// # });
     /// ```
     pub async fn fetch_user_info(&self, user: &str) -> anyhow::Result<Arc<UserInfoPacket>> {
-        if let Some(data) = self.user_info_cache.get(user) {
+        let user = user.to_lowercase();
+        if let Some(data) = self.user_info_cache.get(&user) {
             return Ok(Arc::clone(&data));
         }
 
@@ -138,7 +139,8 @@ impl CachedClient {
     /// # });
     /// ```
     pub async fn fetch_user_records(&self, user: &str) -> anyhow::Result<Arc<UserRecordsPacket>> {
-        if let Some(data) = self.user_records_cache.get(user) {
+        let user = user.to_lowercase();
+        if let Some(data) = self.user_records_cache.get(&user) {
             return Ok(Arc::clone(&data));
         }
 
@@ -308,6 +310,7 @@ impl CachedClient {
         &self,
         country: Option<String>,
     ) -> anyhow::Result<Arc<LeagueFullPacket>> {
+        let country = country.map(|c| c.to_uppercase());
         if let Some(data) = self.full_league_leaderboard_cache.get(&country) {
             return Ok(Arc::clone(&data));
         }
