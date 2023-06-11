@@ -53,7 +53,7 @@ pub struct UserInfoUser {
     pub banner_revision: Option<i64>,
     pub bio: Option<String>,
     pub connections: UserConnections,
-    pub friend_count: i64,
+    pub friend_count: Option<i64>,
     pub distinguishment: Option<UserDistinguishment>
 }
 
