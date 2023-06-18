@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use serde::{Serialize, Deserialize};
 
 use crate::models::packet::Packet;
@@ -5,8 +7,8 @@ use crate::models::packet::Packet;
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LeagueEndContextUser {
     #[serde(rename = "_id")]
-    pub id: String,
-    pub username: String
+    pub id: Arc<str>,
+    pub username: Arc<str>
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -63,21 +65,21 @@ pub struct LeagueEndContext {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LeagueStreamUser {
     #[serde(rename = "_id")]
-    pub id: String,
-    pub username: String
+    pub id: Arc<str>,
+    pub username: Arc<str>
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LeagueStreamRecords {
     #[serde(rename = "_id")]
-    pub id: String,
+    pub id: Arc<str>,
     pub endcontext: Vec<LeagueEndContext>,
     #[serde(rename = "ismulti")]
     pub is_multi: bool,
     #[serde(rename = "replayid")]
-    pub replay_id: String,
-    pub stream: String,
-    pub ts: String,
+    pub replay_id: Arc<str>,
+    pub stream: Arc<str>,
+    pub ts: Arc<str>,
     pub user: LeagueStreamUser
 }
 

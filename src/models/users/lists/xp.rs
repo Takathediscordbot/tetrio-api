@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::models::packet::Packet;
 use crate::models::users::user_role::UserRole;
 use serde::{Deserialize, Serialize};
@@ -5,11 +7,11 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct XpUser {
     #[serde(rename = "_id")]
-    pub id: Box<str>,
-    pub username: Box<str>,
+    pub id: Arc<str>,
+    pub username: Arc<str>,
     pub role: UserRole,
-    pub ts: Option<Box<str>>,
-    pub country: Option<Box<str>>,
+    pub ts: Option<Arc<str>>,
+    pub country: Option<Arc<str>>,
     pub supporter: Option<bool>,
     pub verified: bool,
     pub xp: f64,

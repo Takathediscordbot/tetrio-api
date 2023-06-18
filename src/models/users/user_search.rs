@@ -1,11 +1,13 @@
+use std::sync::Arc;
+
 use crate::models::packet::Packet;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct UserSearch {
     #[serde(rename = "_id")]
-    pub id: Box<str>,
-    pub username: Box<str>,
+    pub id: Arc<str>,
+    pub username: Arc<str>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]

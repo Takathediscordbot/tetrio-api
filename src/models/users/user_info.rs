@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use serde::{Deserialize, Serialize};
 use crate::models::packet::Packet;
 use crate::models::users::user_badge::UserBadge;
@@ -33,17 +35,17 @@ pub struct UserInfoLeague {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct UserInfoUser {
     #[serde(rename = "_id")]
-    pub id: Box<str>,
-    pub username: Box<str>,
+    pub id: Arc<str>,
+    pub username: Arc<str>,
     pub role: UserRole,
-    pub ts: Option<Box<str>>,
-    pub botmaster: Option<Box<str>>,
+    pub ts: Option<Arc<str>>,
+    pub botmaster: Option<Arc<str>>,
     pub badges: Box<[UserBadge]>,
     pub xp: f64,
     pub gamesplayed: i64,
     pub gameswon: i64,
     pub gametime: f64,
-    pub country: Option<Box<str>>,
+    pub country: Option<Arc<str>>,
     pub badstanding: Option<bool>,
     pub supporter: Option<bool>,
     pub supporter_tier: i64,
@@ -51,7 +53,7 @@ pub struct UserInfoUser {
     pub league: UserInfoLeague,
     pub avatar_revision: Option<i64>,
     pub banner_revision: Option<i64>,
-    pub bio: Option<Box<str>>,
+    pub bio: Option<Arc<str>>,
     pub connections: UserConnections,
     pub friend_count: Option<i64>,
     pub distinguishment: Option<UserDistinguishment>
