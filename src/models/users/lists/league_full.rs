@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::models::packet::Packet;
 use crate::models::users::user_rank::UserRank;
 use crate::models::users::user_role::UserRole;
@@ -21,11 +23,11 @@ pub struct LeagueFullData {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LeagueFullUser {
     #[serde(rename = "_id")]
-    pub id: String,
-    pub username: String,
+    pub id: Arc<str>,
+    pub username: Arc<str>,
     pub role: UserRole,
     pub xp: f64,
-    pub country: Option<String>,
+    pub country: Option<Arc<str>>,
     pub supporter: Option<bool>,
     pub verified: bool,
     pub league: LeagueFullData,
