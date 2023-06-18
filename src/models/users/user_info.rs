@@ -33,17 +33,17 @@ pub struct UserInfoLeague {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct UserInfoUser {
     #[serde(rename = "_id")]
-    pub id: String,
-    pub username: String,
+    pub id: Box<str>,
+    pub username: Box<str>,
     pub role: UserRole,
-    pub ts: Option<String>,
-    pub botmaster: Option<String>,
-    pub badges: Vec<UserBadge>,
+    pub ts: Option<Box<str>>,
+    pub botmaster: Option<Box<str>>,
+    pub badges: Box<[UserBadge]>,
     pub xp: f64,
     pub gamesplayed: i64,
     pub gameswon: i64,
     pub gametime: f64,
-    pub country: Option<String>,
+    pub country: Option<Box<str>>,
     pub badstanding: Option<bool>,
     pub supporter: Option<bool>,
     pub supporter_tier: i64,
@@ -51,7 +51,7 @@ pub struct UserInfoUser {
     pub league: UserInfoLeague,
     pub avatar_revision: Option<i64>,
     pub banner_revision: Option<i64>,
-    pub bio: Option<String>,
+    pub bio: Option<Box<str>>,
     pub connections: UserConnections,
     pub friend_count: Option<i64>,
     pub distinguishment: Option<UserDistinguishment>

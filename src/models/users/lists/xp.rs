@@ -5,11 +5,11 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct XpUser {
     #[serde(rename = "_id")]
-    pub id: String,
-    pub username: String,
+    pub id: Box<str>,
+    pub username: Box<str>,
     pub role: UserRole,
-    pub ts: Option<String>,
-    pub country: Option<String>,
+    pub ts: Option<Box<str>>,
+    pub country: Option<Box<str>>,
     pub supporter: Option<bool>,
     pub verified: bool,
     pub xp: f64,
@@ -20,7 +20,7 @@ pub struct XpUser {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct XpPacketData {
-    pub users: Vec<XpUser>,
+    pub users: Box<[XpUser]>,
 }
 
 pub type XpPacket = Packet<XpPacketData>;

@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserDistinguishment {
     #[serde(rename = "type")]
-    pub distinguishment_type: String,
-    pub detail: Option<String>,
-    pub header: Option<String>,
-    pub footer: Option<String>
+    pub distinguishment_type: Box<str>,
+    pub detail: Option<Box<str>>,
+    pub header: Option<Box<str>>,
+    pub footer: Option<Box<str>>
 }

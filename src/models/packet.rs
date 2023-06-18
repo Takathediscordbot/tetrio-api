@@ -1,5 +1,8 @@
 
+use std::{time::Duration, sync::Arc};
+
 use super::cache::Cache;
+use moka::Expiry;
 use serde::{self, Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -60,5 +63,19 @@ impl<T: Clone> Packet<T> {
 
     pub fn is_success(&self) -> bool {
         self.success
+    }
+}
+
+pub struct CacheExpiration;
+
+impl<K, T> Expiry<K, Arc<Packet<T>>> for CacheExpiration {
+    fn expire_after_create(&self, _key: &K, value: &Arc<Packet<T>>, _current_time: std::time::Instant) -> Option<std::time::Duration> {
+         match &value.cache {
+            Some(a) => {
+                 Some(a.time_until_elapsed())
+                
+            },
+            None => Some(Duration::from_secs(0)),
+        }               
     }
 }

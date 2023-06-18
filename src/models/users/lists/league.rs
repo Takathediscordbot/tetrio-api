@@ -21,11 +21,11 @@ pub struct LeagueData {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LeagueUser {
     #[serde(rename = "_id")]
-    pub id: String,
-    pub username: String,
+    pub id: Box<str>,
+    pub username: Box<str>,
     pub role: UserRole,
     pub xp: f64,
-    pub country: Option<String>,
+    pub country: Option<Box<str>>,
     pub supporter: Option<bool>,
     pub verified: bool,
     pub league: LeagueData,
@@ -33,7 +33,7 @@ pub struct LeagueUser {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LeaguePacketData {
-    pub users: Vec<LeagueUser>,
+    pub users: Box<[LeagueUser]>,
 }
 
 

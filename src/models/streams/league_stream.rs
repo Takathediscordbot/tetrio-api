@@ -1,5 +1,7 @@
 use serde::{Serialize, Deserialize};
 
+use crate::models::packet::Packet;
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LeagueEndContextUser {
     #[serde(rename = "_id")]
@@ -83,3 +85,5 @@ pub struct LeagueStreamRecords {
 pub struct LeagueStream {
     pub records: Vec<LeagueStreamRecords>
 }
+
+pub type LeagueStreamPacket = Packet<LeagueStream>;

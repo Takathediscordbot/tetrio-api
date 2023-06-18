@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct UserSearch {
     #[serde(rename = "_id")]
-    pub id: String,
-    pub username: String,
+    pub id: Box<str>,
+    pub username: Box<str>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]

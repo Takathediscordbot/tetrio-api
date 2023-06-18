@@ -1,5 +1,4 @@
 use std::sync::Arc;
-use std::time::Duration;
 
 use moka::future::Cache;
 use serde::de::DeserializeOwned;
@@ -9,7 +8,7 @@ use super::value_bound_query::ValueBoundQuery;
 use crate::models::news::latest::{LatestNewsPacket};
 use crate::models::news::news::{NewsPacket};
 
-use crate::models::packet::Packet;
+use crate::models::packet::{Packet, CacheExpiration};
 use crate::models::streams::league_stream::LeagueStream;
 use crate::models::streams::stream::{StreamPacket};
 use crate::models::users::lists::league::{LeaguePacket};
@@ -20,31 +19,31 @@ use crate::models::users::user_records::{UserRecordsPacket};
 use crate::models::users::user_search::{UserSearchPacket};
 
 pub struct CachedClient {
-    user_info_cache: Cache<String, Arc<UserInfoPacket>>,
-    user_records_cache: Cache<String, Arc<UserRecordsPacket>>,
-    user_search_cache: Cache<String, Arc<UserSearchPacket>>,
-    full_league_leaderboard_cache: Cache<Option<String>, Arc<LeagueFullPacket>>,
+    user_info_cache: Cache<Box<str>, Arc<UserInfoPacket>>,
+    user_records_cache: Cache<Box<str>, Arc<UserRecordsPacket>>,
+    user_search_cache: Cache<Box<str>, Arc<UserSearchPacket>>,
+    full_league_leaderboard_cache: Cache<Option<Box<str>>, Arc<LeagueFullPacket>>,
     xp_leaderboard_cache: Cache<ValueBoundQuery, Arc<XpPacket>>,
     league_leaderboard_cache: Cache<ValueBoundQuery, Arc<LeaguePacket>>,
-    stream_cache: Cache<String, Arc<StreamPacket>>,
-    league_stream_cache: Cache<String, Arc<Packet<LeagueStream>>>,
+    stream_cache: Cache<Box<str>, Arc<StreamPacket>>,
+    league_stream_cache: Cache<Box<str>, Arc<Packet<LeagueStream>>>,
     news_cache: Cache<Option<i64>, Arc<NewsPacket>>,
-    latest_news_cache: Cache<(String, Option<i64>), Arc<LatestNewsPacket>>,
+    latest_news_cache: Cache<(Box<str>, Option<i64>), Arc<LatestNewsPacket>>,
 }
 
 impl Default for CachedClient {
     fn default() -> Self {
         Self { 
-            user_info_cache: Cache::builder().time_to_live(Duration::from_secs(300)).build(),
-            user_records_cache: Cache::builder().time_to_live(Duration::from_secs(900)).build(),
-            user_search_cache: Cache::builder().time_to_live(Duration::from_secs(300)).build(),
-            league_leaderboard_cache: Cache::builder().time_to_live(Duration::from_secs(600)).build(),
-            xp_leaderboard_cache: Cache::builder().time_to_live(Duration::from_secs(600)).build(),
-            full_league_leaderboard_cache: Cache::builder().time_to_live(Duration::from_secs(3600)).build(),
-            stream_cache: Cache::builder().time_to_live(Duration::from_secs(60)).build(),
-            news_cache: Cache::builder().time_to_live(Duration::from_secs(60)).build(),
-            latest_news_cache: Cache::builder().time_to_live(Duration::from_secs(60)).build(),
-            league_stream_cache: Cache::builder().time_to_live(Duration::from_secs(60)).build()
+            user_info_cache: Cache::builder().expire_after(CacheExpiration).build(),
+            user_records_cache: Cache::builder().expire_after(CacheExpiration).build(),
+            user_search_cache: Cache::builder().expire_after(CacheExpiration).build(),
+            league_leaderboard_cache: Cache::builder().expire_after(CacheExpiration).build(),
+            xp_leaderboard_cache: Cache::builder().expire_after(CacheExpiration).build(),
+            full_league_leaderboard_cache: Cache::builder().expire_after(CacheExpiration).build(),
+            stream_cache: Cache::builder().expire_after(CacheExpiration).build(),
+            news_cache: Cache::builder().expire_after(CacheExpiration).build(),
+            latest_news_cache: Cache::builder().expire_after(CacheExpiration).build(),
+            league_stream_cache: Cache::builder().expire_after(CacheExpiration).build()
         }
     }
 }
@@ -89,7 +88,7 @@ impl CachedClient {
     /// # });
     /// ```
     pub async fn fetch_user_info(&self, user: &str) -> anyhow::Result<Arc<UserInfoPacket>> {
-        let user = user.to_lowercase();
+        let user = user.to_lowercase().into_boxed_str();
         if let Some(data) = self.user_info_cache.get(&user) {
             return Ok(Arc::clone(&data));
         }
@@ -102,7 +101,7 @@ impl CachedClient {
         };
 
         if data.is_success() {
-            self.user_info_cache.insert(user.to_owned(), Arc::clone(&data)).await;
+            self.user_info_cache.insert(user, Arc::clone(&data)).await;
         }
         
         Ok(data)
@@ -139,8 +138,8 @@ impl CachedClient {
     /// # });
     /// ```
     pub async fn fetch_user_records(&self, user: &str) -> anyhow::Result<Arc<UserRecordsPacket>> {
-        let user = user.to_lowercase();
-        if let Some(data) = self.user_records_cache.get(&user) {
+        let user = user.to_lowercase().into_boxed_str();
+        if let Some(data) = self.user_records_cache.get(&user.clone()) {
             return Ok(Arc::clone(&data));
         }
 
@@ -152,7 +151,7 @@ impl CachedClient {
         };
 
         if data.is_success() {
-            self.user_records_cache.insert(user.to_owned(), Arc::clone(&data)).await;
+            self.user_records_cache.insert(user, Arc::clone(&data)).await;
         }
         
         Ok(data)
@@ -186,7 +185,8 @@ impl CachedClient {
     /// # });
     /// ```
     pub async fn search_user(&self, query: &str) -> anyhow::Result<Arc<UserSearchPacket>> {
-        if let Some(data) = self.user_search_cache.get(query) {
+        let query = query.to_string().into_boxed_str();
+        if let Some(data) = self.user_search_cache.get(&query) {
             return Ok(Arc::clone(&data));
         }
 
@@ -198,7 +198,7 @@ impl CachedClient {
         };
 
         if data.is_success() {
-            self.user_search_cache.insert(query.to_owned(), Arc::clone(&data)).await;
+            self.user_search_cache.insert(query, Arc::clone(&data)).await;
         }
         
         Ok(data)
@@ -310,7 +310,7 @@ impl CachedClient {
         &self,
         country: Option<String>,
     ) -> anyhow::Result<Arc<LeagueFullPacket>> {
-        let country = country.map(|c| c.to_uppercase());
+        let country = country.map(|c| c.to_uppercase().into_boxed_str());
         if let Some(data) = self.full_league_leaderboard_cache.get(&country) {
             return Ok(Arc::clone(&data));
         }
@@ -428,7 +428,8 @@ impl CachedClient {
     }
     
     pub async fn fetch_stream(&self, stream: &str) -> anyhow::Result<Arc<StreamPacket>> {
-        if let Some(data) = self.stream_cache.get(stream) {
+        let stream = stream.to_string().into_boxed_str();
+        if let Some(data) = self.stream_cache.get(&stream) {
             return Ok(Arc::clone(&data));
         }
 
@@ -439,7 +440,7 @@ impl CachedClient {
         };
 
         if data.is_success() {
-            self.stream_cache.insert(stream.to_owned(), Arc::clone(&data)).await;
+            self.stream_cache.insert(stream, Arc::clone(&data)).await;
         }
         
         Ok(data)
@@ -477,8 +478,8 @@ impl CachedClient {
         stream: &str,
         limit: Option<i64>,
     ) -> anyhow::Result<Arc<LatestNewsPacket>> {
-
-        if let Some(data) = self.latest_news_cache.get(&(stream.to_string(), limit)) {
+        let stream = stream.to_string().into_boxed_str();
+        if let Some(data) = self.latest_news_cache.get(&(stream.clone(), limit)) {
             return Ok(Arc::clone(&data));
         }
 
@@ -496,14 +497,15 @@ impl CachedClient {
         };
 
         if data.is_success() {
-            self.latest_news_cache.insert((stream.to_string(), limit), Arc::clone(&data)).await;
+            self.latest_news_cache.insert((stream, limit), Arc::clone(&data)).await;
         }
         
         Ok(data)
     }
 
     pub async fn fetch_tetra_league_recent(&self, user_id: &str) -> anyhow::Result<Arc<Packet<LeagueStream>>> {
-        if let Some(data) = self.league_stream_cache.get(user_id) {
+        let user_id = user_id.to_string().into_boxed_str();
+        if let Some(data) = self.league_stream_cache.get(&user_id) {
             return Ok(Arc::clone(&data));
         }
 
@@ -514,7 +516,7 @@ impl CachedClient {
         };
 
         if data.is_success() {
-            self.league_stream_cache.insert(user_id.to_owned(), Arc::clone(&data)).await;
+            self.league_stream_cache.insert(user_id, Arc::clone(&data)).await;
         }
         
         Ok(data)

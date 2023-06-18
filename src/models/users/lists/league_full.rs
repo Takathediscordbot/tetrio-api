@@ -33,7 +33,7 @@ pub struct LeagueFullUser {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LeagueFullPacketData {
-    pub users: Vec<LeagueFullUser>,
+    pub users: Box<[LeagueFullUser]>,
 }
 
 pub type LeagueFullPacket = Packet<LeagueFullPacketData>;
