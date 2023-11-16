@@ -11,7 +11,7 @@ pub fn add(left: usize, right: usize) -> usize {
 mod tests {
     
 
-    use crate::{http::value_bound_query::ValueBoundQuery};
+    use crate::http::value_bound_query::ValueBoundQuery;
 
     use super::http::client::{self as client};
     
@@ -210,7 +210,7 @@ mod tests {
 
 #[cfg(test)] 
 mod cached_tests {
-    use crate::{http::value_bound_query::ValueBoundQuery};
+    use crate::http::value_bound_query::ValueBoundQuery;
 
     use crate::http::cached_client::CachedClient;    
 

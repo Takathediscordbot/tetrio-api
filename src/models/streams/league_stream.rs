@@ -48,7 +48,10 @@ pub struct LeagueEndContextPoints {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LeagueEndContext {
-    pub user: LeagueEndContextUser,
+    pub user: Option<LeagueEndContextUser>,
+
+    pub id: Option<Arc<str>>,
+    pub username: Option<Arc<str>>,
     pub handling: LeagueEndContextHandling,
     pub active: bool,
     pub success: bool,
@@ -60,6 +63,16 @@ pub struct LeagueEndContext {
     pub score: i32,
     pub wins: i32,
     pub points: LeagueEndContextPoints
+}
+
+impl LeagueEndContext {
+    pub fn get_id(&self) -> Option<Arc<str>> {
+        return self.id.clone().or(self.user.clone().map(|user| user.id))
+    }
+
+    pub fn get_username(&self) -> Option<Arc<str>> {
+        return self.username.clone().or(self.user.clone().map(|user| user.username))
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
