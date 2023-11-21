@@ -5,18 +5,17 @@ use serde::de::DeserializeOwned;
 
 use super::client;
 use super::value_bound_query::ValueBoundQuery;
-use crate::models::news::latest::{LatestNewsPacket};
-use crate::models::news::news::{NewsPacket};
-
+use crate::models::news::latest::LatestNewsPacket;
+use crate::models::news::news::NewsPacket;
 use crate::models::packet::{Packet, CacheExpiration};
 use crate::models::streams::league_stream::LeagueStream;
-use crate::models::streams::stream::{StreamPacket};
-use crate::models::users::lists::league::{LeaguePacket};
-use crate::models::users::lists::league_full::{LeagueFullPacket};
-use crate::models::users::lists::xp::{XpPacket};
-use crate::models::users::user_info::{UserInfoPacket};
-use crate::models::users::user_records::{UserRecordsPacket};
-use crate::models::users::user_search::{UserSearchPacket};
+use crate::models::streams::stream::StreamPacket;
+use crate::models::users::lists::league::LeaguePacket;
+use crate::models::users::lists::league_full::LeagueFullPacket;
+use crate::models::users::lists::xp::XpPacket;
+use crate::models::users::user_info::UserInfoPacket;
+use crate::models::users::user_records::UserRecordsPacket;
+use crate::models::users::user_search::UserSearchPacket;
 
 pub struct CachedClient {
     user_info_cache: Cache<Box<str>, Arc<UserInfoPacket>>,
@@ -89,7 +88,7 @@ impl CachedClient {
     /// ```
     pub async fn fetch_user_info(&self, user: &str) -> anyhow::Result<Arc<UserInfoPacket>> {
         let user = user.to_lowercase().into_boxed_str();
-        if let Some(data) = self.user_info_cache.get(&user) {
+        if let Some(data) = self.user_info_cache.get(&user).await {
             return Ok(Arc::clone(&data));
         }
 
@@ -139,7 +138,7 @@ impl CachedClient {
     /// ```
     pub async fn fetch_user_records(&self, user: &str) -> anyhow::Result<Arc<UserRecordsPacket>> {
         let user = user.to_lowercase().into_boxed_str();
-        if let Some(data) = self.user_records_cache.get(&user.clone()) {
+        if let Some(data) = self.user_records_cache.get(&user.clone()).await {
             return Ok(Arc::clone(&data));
         }
 
@@ -186,7 +185,7 @@ impl CachedClient {
     /// ```
     pub async fn search_user(&self, query: &str) -> anyhow::Result<Arc<UserSearchPacket>> {
         let query = query.to_string().into_boxed_str();
-        if let Some(data) = self.user_search_cache.get(&query) {
+        if let Some(data) = self.user_search_cache.get(&query).await {
             return Ok(Arc::clone(&data));
         }
 
@@ -277,7 +276,7 @@ impl CachedClient {
     /// # });
     /// ```
     pub async fn fetch_league_leaderboard(&self, query: ValueBoundQuery) -> anyhow::Result<Arc<LeaguePacket>> {
-        if let Some(data) = self.league_leaderboard_cache.get(&query) {
+        if let Some(data) = self.league_leaderboard_cache.get(&query).await {
             return Ok(Arc::clone(&data));
         }
 
@@ -311,7 +310,7 @@ impl CachedClient {
         country: Option<String>,
     ) -> anyhow::Result<Arc<LeagueFullPacket>> {
         let country = country.map(|c| c.to_uppercase().into_boxed_str());
-        if let Some(data) = self.full_league_leaderboard_cache.get(&country) {
+        if let Some(data) = self.full_league_leaderboard_cache.get(&country).await {
             return Ok(Arc::clone(&data));
         }
 
@@ -410,7 +409,7 @@ impl CachedClient {
     /// # });
     /// ```
     pub async fn fetch_xp_leaderboard(&self, query: ValueBoundQuery) -> anyhow::Result<Arc<XpPacket>> {
-        if let Some(data) = self.xp_leaderboard_cache.get(&query) {
+        if let Some(data) = self.xp_leaderboard_cache.get(&query).await {
             return Ok(Arc::clone(&data));
         }
 
@@ -429,7 +428,7 @@ impl CachedClient {
     
     pub async fn fetch_stream(&self, stream: &str) -> anyhow::Result<Arc<StreamPacket>> {
         let stream = stream.to_string().into_boxed_str();
-        if let Some(data) = self.stream_cache.get(&stream) {
+        if let Some(data) = self.stream_cache.get(&stream).await {
             return Ok(Arc::clone(&data));
         }
 
@@ -449,7 +448,7 @@ impl CachedClient {
     
     pub async fn fetch_news(&self, limit: Option<i64>) -> anyhow::Result<Arc<NewsPacket>> {
 
-        if let Some(data) = self.news_cache.get(&limit) {
+        if let Some(data) = self.news_cache.get(&limit).await {
             return Ok(Arc::clone(&data));
         }
 
@@ -479,7 +478,7 @@ impl CachedClient {
         limit: Option<i64>,
     ) -> anyhow::Result<Arc<LatestNewsPacket>> {
         let stream = stream.to_string().into_boxed_str();
-        if let Some(data) = self.latest_news_cache.get(&(stream.clone(), limit)) {
+        if let Some(data) = self.latest_news_cache.get(&(stream.clone(), limit)).await {
             return Ok(Arc::clone(&data));
         }
 
@@ -505,7 +504,7 @@ impl CachedClient {
 
     pub async fn fetch_tetra_league_recent(&self, user_id: &str) -> anyhow::Result<Arc<Packet<LeagueStream>>> {
         let user_id = user_id.to_string().into_boxed_str();
-        if let Some(data) = self.league_stream_cache.get(&user_id) {
+        if let Some(data) = self.league_stream_cache.get(&user_id).await {
             return Ok(Arc::clone(&data));
         }
 
