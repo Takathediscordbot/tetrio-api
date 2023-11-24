@@ -67,11 +67,11 @@ pub struct LeagueEndContext {
 
 impl LeagueEndContext {
     pub fn get_id(&self) -> Option<Arc<str>> {
-        return self.id.clone().or(self.user.clone().map(|user| user.id))
+        self.id.clone().or(self.user.clone().map(|user| user.id))
     }
 
     pub fn get_username(&self) -> Option<Arc<str>> {
-        return self.username.clone().or(self.user.clone().map(|user| user.username))
+        self.username.clone().or(self.user.clone().map(|user| user.username))
     }
 }
 

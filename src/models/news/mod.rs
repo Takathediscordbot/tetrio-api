@@ -1,2 +1,5 @@
 pub mod latest;
-pub mod news;
+
+mod news_details;
+
+pub use news_details::*;

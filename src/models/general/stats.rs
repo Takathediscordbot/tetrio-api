@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 pub struct Stats {
     pub usercount: i64,
     pub usercount_delta: f64,
-    pub anon_count: i64,
+    pub anoncount: i64,
     pub rankedcount: i64,
     pub replaycount: i64,
     pub gamesplayed: i64,

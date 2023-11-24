@@ -5,11 +5,13 @@ pub enum ValueBoundQuery {
         after: ordered_float::OrderedFloat<f64>,
         limit: Option<i64>,
         country: Option<String>,
+        session_id: Option<String>
     },
     Before {
         before: ordered_float::OrderedFloat<f64>,
         limit: Option<i64>,
         country: Option<String>,
+        session_id: Option<String>
     },
     NotBound {
         limit: Option<i64>,
@@ -25,6 +27,7 @@ impl ValueBoundQuery {
                 after,
                 limit,
                 country,
+                ..
             } => {
                 let mut result = format!("?after={after}");
                 if let Some(limit) = limit {
@@ -41,6 +44,7 @@ impl ValueBoundQuery {
                 before,
                 limit,
                 country,
+                ..
             } => {
                 let mut result = format!("?before={before}");
                 if let Some(limit) = limit {
