@@ -72,7 +72,7 @@ async fn main() {
 
 ### Examples
 
-There are code examples in the (https://github.com/Takathediscordbot/tetrio-api/tree/main/examples)[examples folder] of this git repository. 
+There are code examples in the [examples folder](https://github.com/Takathediscordbot/tetrio-api/tree/main/examples) of this git repository. 
 The readme in there will indicate how to run examples.
 
 ### Fetching a User
