@@ -186,6 +186,49 @@ async fn fetch_leaderboard_before_boundary() {
 }
 
 #[tokio::test]
+async fn fetch_league_leaderboard_after_boundary_with_session_id() {
+    delay_test();
+    let client = CachedClient::default();
+    test_ok_success_is_some(client
+        .fetch_league_leaderboard(ValueBoundQuery::After {
+            after: ordered_float::OrderedFloat(24000.5),
+            limit: None,
+            country: None,
+            session_id: Some("AZERTYUIOP".to_string())
+        })
+        .await);
+    test_ok_success_is_some(client
+        .fetch_league_leaderboard(ValueBoundQuery::After {
+            after: ordered_float::OrderedFloat(24000.5),
+            limit: None,
+            country: None,
+            session_id: Some("AZERTYUIOP".to_string())
+        })
+        .await);
+}
+#[tokio::test]
+async fn fetch_league_leaderboard_before_boundary_with_session_id() {
+    delay_test();
+    let client = CachedClient::default();
+    test_ok_success_is_some(client
+        .fetch_league_leaderboard(ValueBoundQuery::Before {
+            before: ordered_float::OrderedFloat(22000.5),
+            limit: None,
+            country: None,
+            session_id: Some("AZERTYUIOP".to_string())
+        })
+        .await);
+    test_ok_success_is_some(client
+        .fetch_league_leaderboard(ValueBoundQuery::Before {
+            before: ordered_float::OrderedFloat(22000.5),
+            limit: None,
+            country: None,
+            session_id: Some("AZERTYUIOP".to_string())
+        })
+        .await);
+}
+
+#[tokio::test]
 async fn fetch_xp_leaderboard_no_query() {
     delay_test();
     let client = CachedClient::default();
@@ -252,6 +295,50 @@ async fn fetch_xp_leaderboard_before_boundary() {
         })
         .await);
 }
+
+#[tokio::test]
+async fn fetch_xp_leaderboard_after_boundary_with_session_id() {
+    delay_test();
+    let client = CachedClient::default();
+    test_ok_success_is_some(client
+        .fetch_xp_leaderboard(ValueBoundQuery::After {
+            after: ordered_float::OrderedFloat(24000.5),
+            limit: None,
+            country: None,
+            session_id: Some("AZERTYUIOP".to_string())
+        })
+        .await);
+    test_ok_success_is_some(client
+        .fetch_xp_leaderboard(ValueBoundQuery::After {
+            after: ordered_float::OrderedFloat(24000.5),
+            limit: None,
+            country: None,
+            session_id: Some("AZERTYUIOP".to_string())
+        })
+        .await);
+}
+#[tokio::test]
+async fn fetch_xp_leaderboard_before_boundary_with_session_id() {
+    delay_test();
+    let client = CachedClient::default();
+    test_ok_success_is_some(client
+        .fetch_xp_leaderboard(ValueBoundQuery::Before {
+            before: ordered_float::OrderedFloat(22000.5),
+            limit: None,
+            country: None,
+            session_id: Some("AZERTYUIOP".to_string())
+        })
+        .await);
+    test_ok_success_is_some(client
+        .fetch_xp_leaderboard(ValueBoundQuery::Before {
+            before: ordered_float::OrderedFloat(22000.5),
+            limit: None,
+            country: None,
+            session_id: Some("AZERTYUIOP".to_string())
+        })
+        .await);
+}
+
 #[tokio::test]
 #[ignore = "Test takes too long"]
 async fn fetch_full_league_leaderboard() {
