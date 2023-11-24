@@ -1,5 +1,7 @@
 # tetrio-api
 
+[![codecov](https://codecov.io/gh/Takathediscordbot/tetrio-api/graph/badge.svg?token=NPGQ45PP4B)](https://codecov.io/gh/Takathediscordbot/tetrio-api)
+
 A library to interact with the [TETR.IO public API](https://ch.tetr.io), with both a simple http client that doesn't manage cache and a "cached-http-client" that holds the data fetched from the API in memory. 
 A library already exists to interact with the API in rust [here](https://github.com/Rinrin0413/tetr-ch-rs), it is easier to use because it has been published on crates.io and stuff, but I still needed an easier way to interact with the cache so I had to work on this library in the end.
 
@@ -13,7 +15,13 @@ This library **might not** be perfect, but I did write tests, and since rust mod
 
 ### Install
 
-Simply add this to your Cargo.toml
+You can add the package by cargo:
+
+```bash
+cargo add tetrio-api
+```
+
+Or add this to your Cargo.toml
 
 ```toml
 [dependencies]
@@ -31,10 +39,44 @@ tetrio-api = { "git" = "https://github.com/Takathediscordbot/tetrio-api", rev="6
 
 ### How to use
 
+###
+
+Fetching a user
+
+```rs
+use std::f64::NAN;
+
+use tetrio_api::{http::client, models::packet::Packet};
+
+#[tokio::main]
+async fn main() {
+    let user = client::fetch_user_info("takathedinosaur").await.expect("Couldn't fetch the CH.TETR.IO API to find the error! This could have been an error while parsing the data or while trying to send the HTTP request.");
+
+    match user {
+        Packet { data: Some(data), .. } => {
+
+            println!("{} (id: {}): {}pps, {}apm {}vs", data.user.username, data.user.id, data.user.league.pps.unwrap_or(NAN), data.user.league.apm.unwrap_or(NAN), data.user.league.vs.unwrap_or(NAN));
+        },
+        Packet { success, error, .. } => {
+            if success {
+                eprintln!("The API didn't return an error but no data was found somehow!"); 
+                // According to the API documentation that is not a possible case.
+                unreachable!();
+            }
+
+            eprintln!("An error has occured while trying to fetch the user! {:?}", error)            
+        }
+    };
+}
+```
+
 ### Examples
 
-There are code examples in the examples folder of this git repository. 
+There are code examples in the (https://github.com/Takathediscordbot/tetrio-api/tree/main/examples)[examples folder] of this git repository. 
 The readme in there will indicate how to run examples.
+
+### Fetching a User
+
 
 ### Running tests
 

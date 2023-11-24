@@ -3,8 +3,9 @@ name = "tetrio-api"
 version = "0.1.0"
 edition = "2021"
 description = "A wrapper around the https://ch.tetr.io/ public API."
+readme = "README.md"
 license = "MIT"
-
+repository = "https://github.com/takathediscordbot/tetrio-api"
 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

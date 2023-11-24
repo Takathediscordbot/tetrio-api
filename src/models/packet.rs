@@ -5,23 +5,11 @@ use super::cache::Cache;
 use moka::Expiry;
 use serde::{self, Deserialize, Serialize};
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct SuccessPacket<T> {
-    pub success: bool,
-    pub cache: Cache,
-    pub data: T,
-}
-
 
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct ErrorPacket {
-    pub success: bool,
-    pub error: String,
-}
-
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
+/// A struct representing any packet sent by the tetr.io API as shown in the API docs.
+/// I use it as a wrapper to all other models because the structure is always the same.
 pub struct Packet<T> {
     pub success: bool,
     pub cache: Option<Cache>,
@@ -30,12 +18,13 @@ pub struct Packet<T> {
 }
 
 impl<T> Packet<T> {
-
     pub fn is_success(&self) -> bool {
         self.success
     }
 }
 
+/// A struct used to automatically remove the cache entries when their expiration date has passed.
+/// It is based around the cached_until field sent by the TETR.IO api, ensuring that the cache is always respected.
 pub struct CacheExpiration;
 
 impl<K, T> Expiry<K, Arc<Packet<T>>> for CacheExpiration {

@@ -4,6 +4,8 @@ use std::time::{UNIX_EPOCH, SystemTime, Duration};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+/// A cache object sent by the tetr.io api,
+/// only the cached_until field is actually used by the cached http client.
 pub struct Cache {
     pub status: String,
     pub cached_at: u128,
