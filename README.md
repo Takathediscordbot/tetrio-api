@@ -1,9 +1,9 @@
 # tetrio-api
 
-A library to interact with the [https://ch.tetr.io](TETR.IO public API), with both a simple http client that doesn't manage cache and a "cached-http-client" that holds the data fetched from the API in memory. 
-A library already exists to interact with the API in rust (https://github.com/Rinrin0413/tetr-ch-rs)[here], it is easier to use because it has been published on crates.io and stuff, but I still needed an easier way to interact with the cache so I had to work on this library in the end.
+A library to interact with the [TETR.IO public API](https://ch.tetr.io), with both a simple http client that doesn't manage cache and a "cached-http-client" that holds the data fetched from the API in memory. 
+A library already exists to interact with the API in rust [here](https://github.com/Rinrin0413/tetr-ch-rs), it is easier to use because it has been published on crates.io and stuff, but I still needed an easier way to interact with the cache so I had to work on this library in the end.
 
-The library tries to stay accurate to the [https://tetr.io/about/api/](API specs) but I had to take some liberties because: 
+The library tries to stay accurate to the [API specs](https://tetr.io/about/api/) but I had to take some liberties because: 
 - I needed to access replay data, which are not documented
 - Sometimes the documentation was partly innacurate which would cause errors when trying to use the library.
 
