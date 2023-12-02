@@ -7,7 +7,7 @@ use tetrio_api::http::client;
 use tetrio_api::models::packet::Packet;    
 
 fn test_ok_success_is_some<T, E: Debug>(result: Result<Packet<T>, E>) {
-    let data = result.expect("Request failed");
+    let data = result.  expect("Request failed");
     assert_eq!(data.is_success(), true);
     assert_eq!(data.data.is_some(), true);
     assert_eq!(data.cache.is_some(), true);
@@ -62,6 +62,14 @@ async fn fail_fetch_user_info() {
 async fn fetch_user_records() {
     delay_test();
     test_ok_success_is_some(client::fetch_user_records("takathedinosaur").await);
+    delay_test();
+    test_ok_success_is_some(client::fetch_user_records("icly").await);
+    delay_test();
+    test_ok_success_is_some(client::fetch_user_records("toasty").await);
+    delay_test();
+    test_ok_success_is_some(client::fetch_user_records("osk").await);
+    delay_test();
+    test_ok_success_is_some(client::fetch_user_records("kagari").await);
 }
 
 #[tokio::test]

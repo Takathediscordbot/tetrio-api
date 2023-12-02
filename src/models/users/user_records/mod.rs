@@ -1,17 +1,11 @@
+pub mod sprint_record;
+pub mod blitz_record;
 use serde::{Deserialize, Serialize};
+
 use crate::models::packet::Packet;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SprintRecord {
-    pub record: Option<serde_json::Value>,
-    pub rank: Option<i64>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BlitzRecord {
-    pub record: Option<serde_json::Value>,
-    pub rank: Option<i64>,
-}
+pub use self::sprint_record::SprintRecord;
+pub use self::blitz_record::BlitzRecord;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserRecordsInner {
