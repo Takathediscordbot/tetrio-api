@@ -8,81 +8,81 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SprintRecordTime {
-    start: i64,
-    zero: bool,
-    locked: bool,
-    prev: i64,
-    frameoffset: i64,
+    pub start: i64,
+    pub zero: bool,
+    pub locked: bool,
+    pub prev: i64,
+    pub frameoffset: i64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SprintClears {
-    singles: i16,
-    doubles: i16,
-    triples: i16,
-    quads: i16,
-    pentas: Option<i16>,
-    realtspins: i16,
-    minitspins: i16,
-    minitspinsingles: i16,
-    tspinsingles: i16,
-    minitspindoubles: i16,
-    tspindoubles: i16,
-    tspintriples: i16,
-    tspinquads: i16,
-    tspinpentas: Option<i16>,
-    allclear: i16,
+    pub singles: i16,
+    pub doubles: i16,
+    pub triples: i16,
+    pub quads: i16,
+    pub pentas: Option<i16>,
+    pub realtspins: i16,
+    pub minitspins: i16,
+    pub minitspinsingles: i16,
+    pub tspinsingles: i16,
+    pub minitspindoubles: i16,
+    pub tspindoubles: i16,
+    pub tspintriples: i16,
+    pub tspinquads: i16,
+    pub tspinpentas: Option<i16>,
+    pub allclear: i16,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SprintGarbage {
-    sent: i16,
-    received: i16,
-    attack: i16,
-    cleared: i16    
+    pub sent: i16,
+    pub received: i16,
+    pub attack: i16,
+    pub cleared: i16    
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SprintFinesse {
-    combo: i16,
-    faults: i32,
-    perfectpieces: i16
+    pub combo: i16,
+    pub faults: i32,
+    pub perfectpieces: i16
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SprintRecordEndContext {
-    seed: i64,
-    lines: i16,
-    level_lines: i16,
-    level_lines_needed: i16,
-    inputs: i16,
-    holds: Option<i16>,
-    time: SprintRecordTime,
-    score: i64,
-    zenlevel: i16,
-    zenprogress: i16,
-    level: i16,
-    combo: i16,
-    currentcombopower: i16,
-    topcombo: i16,
-    btb: i16,
-    topbtb: i16,
-    currentbtbchainpower: Option<i16>,
-    tspins: i16,
-    piecesplaced: i16,
-    clears: SprintClears,
-    garbage: SprintGarbage,
-    kills: i16,
-    finesse: SprintFinesse,
+    pub seed: i64,
+    pub lines: i16,
+    pub level_lines: i16,
+    pub level_lines_needed: i16,
+    pub inputs: i16,
+    pub holds: Option<i16>,
+    pub time: SprintRecordTime,
+    pub score: i64,
+    pub zenlevel: i16,
+    pub zenprogress: i16,
+    pub level: i16,
+    pub combo: i16,
+    pub currentcombopower: i16,
+    pub topcombo: i16,
+    pub btb: i16,
+    pub topbtb: i16,
+    pub currentbtbchainpower: Option<i16>,
+    pub tspins: i16,
+    pub piecesplaced: i16,
+    pub clears: SprintClears,
+    pub garbage: SprintGarbage,
+    pub kills: i16,
+    pub finesse: SprintFinesse,
     #[serde(rename = "finalTime")]
-    final_time: f64,
-    gametype: Arc<str>,
+    pub final_time: f64,
+    pub gametype: Arc<str>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SprintRecordUser {
-    _id: Arc<str>,
-    username: Arc<str>,
+    pub _id: Arc<str>,
+    pub username: Arc<str>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -91,12 +91,12 @@ pub struct SprintRecordDetails {
     pub id: Arc<str>,
     pub endcontext: SprintRecordEndContext,
     #[serde(rename = "ismulti")]
-    is_multi: Option<bool>,
+    pub is_multi: Option<bool>,
     #[serde(rename = "replayid")]
-    replay_id: Arc<str>,
-    stream: Arc<str>,
-    ts: Arc<str>,
-    user: SprintRecordUser,
+    pub replay_id: Arc<str>,
+    pub stream: Arc<str>,
+    pub ts: Arc<str>,
+    pub user: SprintRecordUser,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
