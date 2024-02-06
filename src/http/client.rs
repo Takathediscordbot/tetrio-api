@@ -1,5 +1,7 @@
-use std::fmt::Display;
 
+
+
+use std::fmt::Display;
 use crate::models::streams::stream::StreamPacket;
 use crate::models::news::NewsPacket;
 use crate::http::value_bound_query::ValueBoundQuery;
@@ -20,13 +22,18 @@ use crate::models::users::lists::league_full::LeagueFullPacket;
 
 pub const TETRIO_API_URL: &str = "https://ch.tetr.io/api/";
 
-async fn make_tetrio_api_request<T: DeserializeOwned>(route: impl Display) -> anyhow::Result<T> {
+/// Make a tetrio api request 
+/// This function should only ever be used for ch.tetr.io/api routes that aren't already implemented in the library.
+pub async fn make_tetrio_api_request<T: DeserializeOwned>(route: impl Display) -> anyhow::Result<T> {
     let url = format!("{TETRIO_API_URL}{route}");
 
     Ok(reqwest::get(url).await?.json::<T>().await?)
 }
 
-async fn make_tetrio_api_request_with_session_id<T: DeserializeOwned>(route: impl Display, session_id: &str) -> anyhow::Result<T> {
+
+/// Make a tetrio api request with an X-SESSION-ID
+/// This function should only ever be used for ch.tetr.io/api routes that aren't already implemented in the library.
+pub async fn make_tetrio_api_request_with_session_id<T: DeserializeOwned>(route: impl Display, session_id: &str) -> anyhow::Result<T> {
     let url = format!("{TETRIO_API_URL}{route}");
     let mut header_map = HeaderMap::new();
     header_map.insert("X-SESSION-ID",  header::HeaderValue::from_str(session_id)?);  
