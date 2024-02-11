@@ -5,6 +5,7 @@ use serde::{Serialize, Deserialize};
 use crate::models::packet::Packet;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct LeagueEndContextUser {
     #[serde(rename = "_id")]
     pub id: Arc<str>,
@@ -12,6 +13,7 @@ pub struct LeagueEndContextUser {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct LeagueEndContextHandling {
     pub arr: f64,
     pub das: f64,
@@ -22,17 +24,20 @@ pub struct LeagueEndContextHandling {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct LeagueEndContextPointExtra {
     pub vs: f64
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct LeagueEndContextPointExtraTracking {
     #[serde(rename = "aggregatestats___vsscore")]
     pub aggregate_stats_vs_score: Vec<f64>
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct LeagueEndContextPoints {
     pub primary: i32,
     pub secondary: f64,
@@ -47,6 +52,7 @@ pub struct LeagueEndContextPoints {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct LeagueEndContext {
     pub user: Option<LeagueEndContextUser>,
 
@@ -76,6 +82,7 @@ impl LeagueEndContext {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct LeagueStreamUser {
     #[serde(rename = "_id")]
     pub id: Arc<str>,
@@ -97,6 +104,7 @@ pub struct LeagueStreamRecords {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct LeagueStream {
     pub records: Vec<LeagueStreamRecords>
 }

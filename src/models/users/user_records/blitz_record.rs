@@ -7,6 +7,7 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct BlitzRecordTime {
     pub start: i64,
     pub zero: bool,
@@ -16,6 +17,7 @@ pub struct BlitzRecordTime {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct BlitzClears {
     pub singles: i16,
     pub doubles: i16,
@@ -35,6 +37,7 @@ pub struct BlitzClears {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct BlitzGarbage {
     pub sent: i16,
     pub received: i16,
@@ -43,6 +46,7 @@ pub struct BlitzGarbage {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct BlitzFinesse {
     pub combo: i16,
     pub faults: i32,
@@ -50,6 +54,7 @@ pub struct BlitzFinesse {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct BlitzRecordEndContext {
     pub seed: i64,
     pub lines: i16,
@@ -63,7 +68,7 @@ pub struct BlitzRecordEndContext {
     pub zenprogress: i16,
     pub level: i16,
     pub combo: i16,
-    pub currentcombopower: i16,
+    pub currentcombopower: Option<i16>,
     pub topcombo: i16,
     pub btb: i16,
     pub topbtb: i16,
@@ -80,12 +85,14 @@ pub struct BlitzRecordEndContext {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct BlitzRecordUser {
     pub _id: Arc<str>,
     pub username: Arc<str>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct BlitzRecordDetails {
     #[serde(rename = "_id")]
     pub id: Arc<str>,
@@ -100,6 +107,7 @@ pub struct BlitzRecordDetails {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct BlitzRecord {
     pub record: Option<BlitzRecordDetails>,
     pub rank: Option<i64>,

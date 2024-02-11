@@ -3,6 +3,7 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct UserDistinguishment {
     #[serde(rename = "type")]
     pub distinguishment_type: Arc<str>,

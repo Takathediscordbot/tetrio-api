@@ -19,6 +19,7 @@ use crate::models::users::user_records::UserRecordsPacket;
 use crate::models::users::user_search::UserSearchPacket;
 use super::error::Error;
 
+/// A TETR.IO Client that automatically caches request results
 pub struct CachedClient {
     general_stats_cache: Cache<(), Arc<StatsPacket>>,
     general_activity_cache: Cache<(), Arc<ActivityPacket>>,

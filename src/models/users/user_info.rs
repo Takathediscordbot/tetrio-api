@@ -10,6 +10,7 @@ use crate::models::users::user_role::UserRole;
 
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct UserInfoLeague {
     pub gamesplayed: i64,
     pub gameswon: i64,

@@ -7,6 +7,7 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct SprintRecordTime {
     pub start: i64,
     pub zero: bool,
@@ -16,6 +17,7 @@ pub struct SprintRecordTime {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct SprintClears {
     pub singles: i16,
     pub doubles: i16,
@@ -35,6 +37,7 @@ pub struct SprintClears {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct SprintGarbage {
     pub sent: i16,
     pub received: i16,
@@ -43,6 +46,7 @@ pub struct SprintGarbage {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct SprintFinesse {
     pub combo: i16,
     pub faults: i32,
@@ -50,6 +54,7 @@ pub struct SprintFinesse {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct SprintRecordEndContext {
     pub seed: i64,
     pub lines: i16,
@@ -80,12 +85,14 @@ pub struct SprintRecordEndContext {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct SprintRecordUser {
     pub _id: Arc<str>,
     pub username: Arc<str>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct SprintRecordDetails {
     #[serde(rename = "_id")]
     pub id: Arc<str>,
@@ -100,6 +107,7 @@ pub struct SprintRecordDetails {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct SprintRecord {
     pub record: Option<SprintRecordDetails>,
     pub rank: Option<i64>,
