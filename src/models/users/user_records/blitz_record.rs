@@ -1,6 +1,7 @@
-/*
-
-*/
+//!
+//! Models used to represent a Blitz record of a user.
+//! None of those models are documented in the API documentation
+//! They are still tested but I can not provide documentation for each of them.
 
 use std::sync::Arc;
 

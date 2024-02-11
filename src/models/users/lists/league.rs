@@ -1,3 +1,5 @@
+//!
+//! [League Leaderboard](https://tetr.io/about/api/#userlistsleague) models
 use std::sync::Arc;
 
 use crate::models::packet::Packet;

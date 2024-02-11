@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 #[serde(deny_unknown_fields)]
+/// The user's TETRA LEAGUE rank.
 pub enum UserRank {
     /// TETR.IO X rank
     X,

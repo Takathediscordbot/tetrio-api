@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+/// The user's role (one of "anon", "user", "bot", "halfmod", "mod", "admin", "sysop", "banned").
 pub enum UserRole {
     /// Anonymous user (user that doesn't own an account)
     #[serde(rename = "anon")]

@@ -1,3 +1,7 @@
+//! Contains the LeagueStreamPacket and its associated types.
+//! Those models are not documented in the API documentation
+//! They are however tested but I cannot provide documentation for the individual fields.
+
 use std::sync::Arc;
 
 use serde::{Serialize, Deserialize};

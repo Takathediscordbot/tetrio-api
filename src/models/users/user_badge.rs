@@ -3,6 +3,8 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize, de::Visitor};
 
 #[derive(Debug, Clone)]
+/// A user badge's timestamp.
+/// Usually a string but has been seen being false in an edge case.
 pub enum UserBadgeTs {
     Boolean(bool),
     String(Arc<str>)
@@ -51,8 +53,13 @@ impl<'d> Deserialize<'d> for UserBadgeTs {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct UserBadge {
+    ///  The badge's internal ID, and the filename of the badge icon (all PNGs within /res/badges/)
     pub id: Arc<str>, 
+    /// The badge's label, shown when hovered.
     pub label: Arc<str>,
+    /// The badge's timestamp, if shown;
+    /// Usually a string but has been seen being false in an edge case.
     pub ts: Option<UserBadgeTs>,
+    /// The badge's group, if it's a group badge.
     pub group: Option<Arc<str>>
 }
