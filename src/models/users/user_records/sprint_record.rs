@@ -41,7 +41,7 @@ pub struct SprintClears {
 pub struct SprintGarbage {
     pub sent: i16,
     pub received: i16,
-    pub attack: i16,
+    pub attack: Option<i16>,
     pub cleared: i16    
 }
 
@@ -68,7 +68,7 @@ pub struct SprintRecordEndContext {
     pub zenprogress: i16,
     pub level: i16,
     pub combo: i16,
-    pub currentcombopower: i16,
+    pub currentcombopower: Option<i16>,
     pub topcombo: i16,
     pub btb: i16,
     pub topbtb: i16,
