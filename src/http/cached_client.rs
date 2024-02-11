@@ -1,12 +1,8 @@
-use std::fmt::Display;
 use std::sync::Arc;
 
 use moka::future::Cache;
-use reqwest::header;
-use reqwest::header::HeaderMap;
-use serde::de::DeserializeOwned;
 
-use super::client;
+use super::client::{fetch_full_league_leaderboard, fetch_general_activity, fetch_general_stats, fetch_latest_news, fetch_league_leaderboard, fetch_news, fetch_stream, fetch_tetra_league_recent, fetch_user_info, fetch_user_records, fetch_xp_leaderboard, search_user};
 use super::value_bound_query::ValueBoundQuery;
 use crate::models::general::activity::ActivityPacket;
 use crate::models::general::stats::StatsPacket;
@@ -21,6 +17,7 @@ use crate::models::users::lists::xp::XpPacket;
 use crate::models::users::user_info::UserInfoPacket;
 use crate::models::users::user_records::UserRecordsPacket;
 use crate::models::users::user_search::UserSearchPacket;
+use super::error::Error;
 
 pub struct CachedClient {
     general_stats_cache: Cache<(), Arc<StatsPacket>>,
@@ -56,24 +53,8 @@ impl Default for CachedClient {
     }
 }
 
-use client::TETRIO_API_URL;
 
 impl CachedClient {
-    async fn make_tetrio_api_request<T: DeserializeOwned>(&self, route: impl Display) -> anyhow::Result<T> {
-        let url = format!("{TETRIO_API_URL}{route}");
-    
-        Ok(reqwest::get(url).await?.json::<T>().await?)
-    }
-
-    async fn make_tetrio_api_request_with_session_id<T: DeserializeOwned>(&self, route: impl Display, session_id: &str) -> anyhow::Result<T> {
-        let url = format!("{TETRIO_API_URL}{route}");
-        let mut header_map = HeaderMap::new();
-        header_map.insert("X-SESSION-ID",  header::HeaderValue::from_str(session_id)?);  
-        let client = reqwest::ClientBuilder::new().default_headers(header_map).build()?;
-
-        Ok(client.get(url).send().await?.json::<T>().await?)
-    }
-
 
     /// # Examples
     /// 
@@ -89,12 +70,12 @@ impl CachedClient {
     /// let general_stats = packet.data.unwrap();
     /// # });
     /// ```
-    pub async fn fetch_general_stats(&self) -> anyhow::Result<Arc<StatsPacket>> {
+    pub async fn fetch_general_stats(&self) -> Result<Arc<StatsPacket>, Error> {
         if let Some(data) = self.general_stats_cache.get(&()).await {
             return Ok(Arc::clone(&data));
         }
 
-        let data = self.make_tetrio_api_request("/general/stats").await;
+        let data = fetch_general_stats().await;
         let result = data.map(Arc::new);
         let Ok(data) = result else {
             return result;
@@ -121,12 +102,12 @@ impl CachedClient {
     /// let general_activity = packet.data.unwrap();
     /// # });
     /// ```
-    pub async fn fetch_general_activity(&self) -> anyhow::Result<Arc<ActivityPacket>> {
+    pub async fn fetch_general_activity(&self) -> Result<Arc<ActivityPacket>, Error> {
         if let Some(data) = self.general_activity_cache.get(&()).await {
             return Ok(Arc::clone(&data));
         }
 
-        let data = self.make_tetrio_api_request("/general/activity").await;
+        let data = fetch_general_activity().await;
         let result = data.map(Arc::new);
         let Ok(data) = result else {
             return result;
@@ -171,13 +152,13 @@ impl CachedClient {
     /// dbg!(&error);
     /// # });
     /// ```
-    pub async fn fetch_user_info(&self, user: &str) -> anyhow::Result<Arc<UserInfoPacket>> {
-        let user = user.to_lowercase().into_boxed_str();
-        if let Some(data) = self.user_info_cache.get(&user).await {
+    pub async fn fetch_user_info(&self, user: &str) -> Result<Arc<UserInfoPacket>, Error> {
+        let user_boxed = user.to_lowercase().into_boxed_str();
+        if let Some(data) = self.user_info_cache.get(&user_boxed).await {
             return Ok(Arc::clone(&data));
         }
 
-        let data = self.make_tetrio_api_request::<UserInfoPacket>(format!("users/{user}")).await;
+        let data = fetch_user_info(user).await;
 
         let result = data.map(Arc::new);
         let Ok(data) = result else {
@@ -185,7 +166,7 @@ impl CachedClient {
         };
 
         if data.is_success() {
-            self.user_info_cache.insert(user, Arc::clone(&data)).await;
+            self.user_info_cache.insert(user_boxed, Arc::clone(&data)).await;
         }
         
         Ok(data)
@@ -225,13 +206,13 @@ impl CachedClient {
     /// dbg!(&error);
     /// # });
     /// ```
-    pub async fn fetch_user_records(&self, user: &str) -> anyhow::Result<Arc<UserRecordsPacket>> {
-        let user = user.to_lowercase().into_boxed_str();
-        if let Some(data) = self.user_records_cache.get(&user.clone()).await {
+    pub async fn fetch_user_records(&self, user: &str) -> Result<Arc<UserRecordsPacket>, Error> {
+        let user_boxed = user.to_lowercase().into_boxed_str();
+        if let Some(data) = self.user_records_cache.get(&user_boxed.clone()).await {
             return Ok(Arc::clone(&data));
         }
 
-        let data = self.make_tetrio_api_request::<UserRecordsPacket>(format!("users/{user}/records")).await;
+        let data = fetch_user_records(user).await;
 
         let result = data.map(Arc::new);
         let Ok(data) = result else {
@@ -239,7 +220,7 @@ impl CachedClient {
         };
 
         if data.is_success() {
-            self.user_records_cache.insert(user, Arc::clone(&data)).await;
+            self.user_records_cache.insert(user_boxed, Arc::clone(&data)).await;
         }
         
         Ok(data)
@@ -274,13 +255,13 @@ impl CachedClient {
     /// assert!(packet.success && packet.data.is_none());
     /// # });
     /// ```
-    pub async fn search_user(&self, query: &str) -> anyhow::Result<Arc<UserSearchPacket>> {
-        let query = query.into();
-        if let Some(data) = self.user_search_cache.get(&query).await {
+    pub async fn search_user(&self, query: &str) -> Result<Arc<UserSearchPacket>, Error> {
+        let query_boxed = query.into();
+        if let Some(data) = self.user_search_cache.get(&query_boxed).await {
             return Ok(Arc::clone(&data));
         }
 
-        let data = self.make_tetrio_api_request::<UserSearchPacket>(format!("users/search/{query}")).await;
+        let data = search_user(query).await;
 
         let result = data.map(Arc::new);
         let Ok(data) = result else {
@@ -288,7 +269,7 @@ impl CachedClient {
         };
 
         if data.is_success() {
-            self.user_search_cache.insert(query, Arc::clone(&data)).await;
+            self.user_search_cache.insert(query_boxed, Arc::clone(&data)).await;
         }
         
         Ok(data)
@@ -376,20 +357,14 @@ impl CachedClient {
     /// dbg!(league_data.users.len());
     /// # });
     /// ```
-    pub async fn fetch_league_leaderboard(&self, query: ValueBoundQuery) -> anyhow::Result<Arc<LeaguePacket>> {
+    pub async fn fetch_league_leaderboard(&self, query: ValueBoundQuery) -> Result<Arc<LeaguePacket>, Error> {
         if let Some(data) = self.league_leaderboard_cache.get(&query).await {
             return Ok(Arc::clone(&data));
         }
 
         
         
-        let query_string = query.as_query_string();
-        let url = format!("users/lists/league{}", query_string);
-        let data = match &query {
-            ValueBoundQuery::After { session_id: Some(session_id), .. } => self.make_tetrio_api_request_with_session_id(url, &session_id).await,
-            ValueBoundQuery::Before { session_id: Some(session_id), .. } => self.make_tetrio_api_request_with_session_id(url, &session_id).await,
-            _ => self.make_tetrio_api_request(url).await
-        };
+        let data = fetch_league_leaderboard(query.clone()).await;
         let result = data.map(Arc::new);
         let Ok(data) = result else {
             return result;
@@ -419,28 +394,21 @@ impl CachedClient {
     pub async fn fetch_full_league_leaderboard(
         &self,
         country: Option<&str>,
-    ) -> anyhow::Result<Arc<LeagueFullPacket>> {
-        let country = country.map(|c| c.to_uppercase().into());
-        if let Some(data) = self.full_league_leaderboard_cache.get(&country).await {
+    ) -> Result<Arc<LeagueFullPacket>, Error> {
+        let country_boxed = country.map(|c| c.to_uppercase().into());
+        if let Some(data) = self.full_league_leaderboard_cache.get(&country_boxed).await {
             return Ok(Arc::clone(&data));
         }
 
-        let query_string = if let Some(country) = &country {
-            format!("?country={country}")
-        } else {
-            String::new()
-        };
 
-
-
-        let data = self.make_tetrio_api_request(format!("users/lists/league/all{}", query_string)).await;
+        let data = fetch_full_league_leaderboard(country).await;
         let result = data.map(Arc::new);
         let Ok(data) = result else {
             return result;
         };
 
         if data.is_success() {
-            self.full_league_leaderboard_cache.insert(country, Arc::clone(&data)).await;
+            self.full_league_leaderboard_cache.insert(country_boxed, Arc::clone(&data)).await;
         }
         
         Ok(data)
@@ -529,19 +497,12 @@ impl CachedClient {
     /// dbg!(xp_data.users.len());
     /// # });
     /// ```
-    pub async fn fetch_xp_leaderboard(&self, query: ValueBoundQuery) -> anyhow::Result<Arc<XpPacket>> {
+    pub async fn fetch_xp_leaderboard(&self, query: ValueBoundQuery) -> Result<Arc<XpPacket>, Error> {
         if let Some(data) = self.xp_leaderboard_cache.get(&query).await {
             return Ok(Arc::clone(&data));
         }
 
-        let query_string = query.as_query_string();
-        let url = format!("users/lists/xp{}", query_string);
-        let data = match &query {
-            ValueBoundQuery::After { session_id: Some(session_id), .. } => self.make_tetrio_api_request_with_session_id(url, &session_id).await,
-            ValueBoundQuery::Before { session_id: Some(session_id), .. } => self.make_tetrio_api_request_with_session_id(url, &session_id).await,
-            _ => self.make_tetrio_api_request(url).await
-        };
-        
+        let data = fetch_xp_leaderboard(query.clone()).await;
         let result = data.map(Arc::new);
         let Ok(data) = result else {
             return result;
@@ -554,39 +515,33 @@ impl CachedClient {
         Ok(data)
     }
     
-    pub async fn fetch_stream(&self, stream: &str) -> anyhow::Result<Arc<StreamPacket>> {
-        let stream = stream.into();
-        if let Some(data) = self.stream_cache.get(&stream).await {
+    pub async fn fetch_stream(&self, stream: &str) -> Result<Arc<StreamPacket>, Error> {
+        let stream_boxed = stream.into();
+        if let Some(data) = self.stream_cache.get(&stream_boxed).await {
             return Ok(Arc::clone(&data));
         }
 
-        let data = self.make_tetrio_api_request(format!("streams/{stream}")).await;
+        let data = fetch_stream(stream).await;
         let result = data.map(Arc::new);
         let Ok(data) = result else {
             return result;
         };
 
         if data.is_success() {
-            self.stream_cache.insert(stream, Arc::clone(&data)).await;
+            self.stream_cache.insert(stream_boxed, Arc::clone(&data)).await;
         }
         
         Ok(data)
         
     }
     
-    pub async fn fetch_news(&self, limit: Option<i64>) -> anyhow::Result<Arc<NewsPacket>> {
+    pub async fn fetch_news(&self, limit: Option<i64>) -> Result<Arc<NewsPacket>, Error> {
 
         if let Some(data) = self.news_cache.get(&limit).await {
             return Ok(Arc::clone(&data));
         }
-
-        let query = if let Some(limit) = limit {
-            format!("?limit={limit}")
-        } else {
-            String::new()
-        };
         
-        let data = self.make_tetrio_api_request(format!("news{query}")).await;
+        let data = fetch_news(limit).await;
 
         let result = data.map(Arc::new);
         let Ok(data) = result else {
@@ -604,19 +559,13 @@ impl CachedClient {
         &self,
         stream: &str,
         limit: Option<i64>,
-    ) -> anyhow::Result<Arc<LatestNewsPacket>> {
-        let stream = stream.to_string().into_boxed_str();
-        if let Some(data) = self.latest_news_cache.get(&(stream.clone(), limit)).await {
+    ) -> Result<Arc<LatestNewsPacket>, Error> {
+        let stream_boxed = stream.to_string().into_boxed_str();
+        if let Some(data) = self.latest_news_cache.get(&(stream_boxed.clone(), limit)).await {
             return Ok(Arc::clone(&data));
         }
 
-        let query = if let Some(limit) = limit {
-            format!("?limit={limit}")
-        } else {
-            String::new()
-        };
-        
-        let data = self.make_tetrio_api_request(format!("news/{stream}{query}")).await;
+        let data = fetch_latest_news(stream, limit).await;
 
         let result = data.map(Arc::new);
         let Ok(data) = result else {
@@ -624,26 +573,26 @@ impl CachedClient {
         };
 
         if data.is_success() {
-            self.latest_news_cache.insert((stream, limit), Arc::clone(&data)).await;
+            self.latest_news_cache.insert((stream_boxed, limit), Arc::clone(&data)).await;
         }
         
         Ok(data)
     }
 
-    pub async fn fetch_tetra_league_recent(&self, user_id: &str) -> anyhow::Result<Arc<Packet<LeagueStream>>> {
-        let user_id = user_id.into();
-        if let Some(data) = self.league_stream_cache.get(&user_id).await {
+    pub async fn fetch_tetra_league_recent(&self, user_id: &str) -> Result<Arc<Packet<LeagueStream>>, Error> {
+        let user_id_boxed = user_id.into();
+        if let Some(data) = self.league_stream_cache.get(&user_id_boxed).await {
             return Ok(Arc::clone(&data));
         }
 
-        let data = self.make_tetrio_api_request(format!("streams/league_userrecent_{user_id}")).await;
+        let data = fetch_tetra_league_recent(user_id).await;
         let result = data.map(Arc::new);
         let Ok(data) = result else {
             return result;
         };
 
         if data.is_success() {
-            self.league_stream_cache.insert(user_id, Arc::clone(&data)).await;
+            self.league_stream_cache.insert(user_id_boxed, Arc::clone(&data)).await;
         }
         
         Ok(data)

@@ -65,6 +65,8 @@ async fn fetch_user_records() {
     delay_test();
     test_ok_success_is_some(client::fetch_user_records("icly").await);
     delay_test();
+    test_ok_success_is_some(client::fetch_user_records("minnevich").await);
+    delay_test();
     test_ok_success_is_some(client::fetch_user_records("toasty").await);
     delay_test();
     test_ok_success_is_some(client::fetch_user_records("osk").await);
