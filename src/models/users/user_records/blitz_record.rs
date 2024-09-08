@@ -1,115 +1,167 @@
-//!
-//! Models used to represent a Blitz record of a user.
-//! None of those models are documented in the API documentation
-//! They are still tested but I can not provide documentation for each of them.
+/*
 
-use std::sync::Arc;
+*/
+
 
 use serde::{Deserialize, Serialize};
 
+
+use crate::{http::parameters::{personal_user_records::GameMode, value_bound_query::Prisecter}, models::common::{APIfloat, APIint, APIintarray, APIsmallint, APIstring}};
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-pub struct BlitzRecordTime {
-    pub start: i64,
+pub struct BlitzAggregateStats {
+    pub apm: APIfloat,
+    pub pps: APIfloat,
+    pub vsscore: APIfloat
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct BlitzTime {
+    pub start: APIint,
     pub zero: bool,
     pub locked: bool,
-    pub prev: i64,
-    pub frameoffset: i64,
+    pub prev: APIint,
+    pub frameoffset: Option<APIint>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct BlitzClears {
-    pub singles: i16,
-    pub doubles: i16,
-    pub triples: i16,
-    pub quads: i16,
-    pub pentas: Option<i16>,
-    pub realtspins: i16,
-    pub minitspins: i16,
-    pub minitspinsingles: i16,
-    pub tspinsingles: i16,
-    pub minitspindoubles: i16,
-    pub tspindoubles: i16,
-    pub tspintriples: i16,
-    pub tspinquads: i16,
-    pub tspinpentas: Option<i16>,
-    pub allclear: i16,
+    pub singles: APIsmallint,
+    pub doubles: APIsmallint,
+    pub triples: APIsmallint,
+    pub quads: APIsmallint,
+    pub pentas: Option<APIsmallint>,
+    pub realtspins: APIsmallint,
+    pub minitspins: APIsmallint,
+    pub minitspinsingles: APIsmallint,
+    pub tspinsingles: APIsmallint,
+    pub minitspindoubles: APIsmallint,
+    pub tspindoubles: APIsmallint,
+    pub minitspintriples: Option<APIsmallint>,
+    pub tspintriples: APIsmallint,
+    pub minitspinquads: Option<APIsmallint>,
+    pub tspinquads: APIsmallint,
+    pub tspinpentas: Option<APIsmallint>,
+    pub allclear: APIsmallint,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct BlitzGarbage {
-    pub sent: i16,
-    pub received: i16,
-    pub attack: i16,
-    pub cleared: i16    
+    pub sent: APIsmallint,
+    pub sent_nomult: Option<APIsmallint>,
+    pub maxspike: Option<APIsmallint>,
+    pub maxspike_nomult: Option<APIsmallint>,
+    pub received: APIsmallint,
+    pub attack: Option<APIsmallint>,
+    pub cleared: Option<APIsmallint>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct BlitzFinesse {
-    pub combo: i16,
-    pub faults: i32,
-    pub perfectpieces: i16
+    pub combo: APIsmallint,
+    pub faults:  APIsmallint,
+    pub perfectpieces:  APIsmallint
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-pub struct BlitzRecordEndContext {
-    pub seed: i64,
-    pub lines: i16,
-    pub level_lines: i16,
-    pub level_lines_needed: i16,
-    pub inputs: i16,
-    pub holds: Option<i16>,
-    pub time: BlitzRecordTime,
-    pub score: i64,
-    pub zenlevel: i16,
-    pub zenprogress: i16,
-    pub level: i16,
-    pub combo: i16,
-    pub currentcombopower: Option<i16>,
-    pub topcombo: i16,
-    pub btb: i16,
-    pub topbtb: i16,
-    pub currentbtbchainpower: Option<i16>,
-    pub tspins: i16,
-    pub piecesplaced: i16,
+pub struct BlitzZenith {
+    pub altitude: APIint,
+    pub rank: APIint,
+    pub peakrank: APIint,
+    pub avgrankpts: APIint,
+    pub floor: APIint,
+    pub targetingfactor: APIint,
+    pub targetinggrace: APIint,
+    pub totalbonus: APIint,
+    pub revives: APIint,
+    #[serde(rename="revivesTotal")]
+    pub revives_total: APIint,
+    pub speedrun: bool,
+    pub speedrun_seen: bool,
+    pub splits: APIintarray
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct BlitzStats {
+    pub seed: Option<APIfloat>,
+    pub lines: APIint,
+    pub level_lines: APIint,
+    pub level_lines_needed: APIint,
+    pub inputs: APIint,
+    pub holds: Option<APIint>,
+    pub time: Option<BlitzTime>,
+    pub score: APIint,
+    pub zenlevel: Option<APIint>,
+    pub zenprogress: Option<APIint>,
+    pub level: APIint,
+    pub combo: APIint,
+    pub currentcombopower: Option<APIint>,
+    pub topcombo: APIint,
+    pub btb: APIint,
+    pub btbpower: Option<APIint>,
+    pub combopower: Option<APIint>,
+    pub topbtb: APIint,
+    pub currentbtbchainpower: Option<APIint>,
+    pub tspins: APIint,
+    pub piecesplaced: APIint,
     pub clears: BlitzClears,
     pub garbage: BlitzGarbage,
-    pub kills: i16,
-    pub finesse: BlitzFinesse,
-    #[serde(rename = "finalTime")]
-    pub final_time: f64,
-    pub gametype: Arc<str>,
+    pub kill: Option<APIint>,
+    pub kills: Option<APIint>,
+    pub finesse: Option<BlitzFinesse>,
+    pub finaltime: APIfloat,
+    pub zenith: Option<BlitzZenith>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct BlitzResults {
+    pub aggregatestats: BlitzAggregateStats,
+    pub stats: BlitzStats,
+    pub gameoverreason: APIstring
+
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct BlitzRecordUser {
-    pub _id: Arc<str>,
-    pub username: Arc<str>,
+    pub id: APIstring,
+    pub username: APIstring,
+    pub avatar_revision: Option<APIint>,
+    pub banner_revision: Option<APIint>,
+    pub country: Option<APIstring>,
+    pub supporter: bool
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-pub struct BlitzRecordDetails {
-    #[serde(rename = "_id")]
-    pub id: Arc<str>,
-    pub endcontext: BlitzRecordEndContext,
-    #[serde(rename = "ismulti")]
-    pub is_multi: Option<bool>,
-    #[serde(rename = "replayid")]
-    pub replay_id: Arc<str>,
-    pub stream: Arc<str>,
-    pub ts: Arc<str>,
-    pub user: BlitzRecordUser,
-}
+pub struct BlitzExtras {}
+
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct BlitzRecord {
-    pub record: Option<BlitzRecordDetails>,
-    pub rank: Option<i64>,
+    #[serde(rename = "_id")]
+    pub id: APIstring,
+    pub replayid: APIstring,
+    pub stub: bool,
+    pub gamemode: GameMode,
+    pub pb: bool,
+    pub oncepb: bool,
+    pub ts: APIstring,
+    pub revolution: Option<APIstring>,
+    pub user: Option<BlitzRecordUser>,
+    pub otherusers: Vec<BlitzRecordUser>,
+    pub leaderboards: Vec<APIstring>,
+    pub results: BlitzResults,
+    pub extras: BlitzExtras,
+    pub disputed: bool,
+    pub p: Prisecter
 }

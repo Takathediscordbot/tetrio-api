@@ -1,25 +1,40 @@
-use thiserror::Error as thisError;
+use std::fmt::{Debug, Display};
 
-#[derive(Debug, thisError)]
-pub enum Error {
-    #[error("An error has occured while sending a request to the server. {error}")]
-    HttpError { error: reqwest::Error },
-    #[error("An error has occured while reading the response from the server. {error}")]
-    ReadingError { error: reqwest::Error },
-    #[error("An error has occured while creating the http client. Couldn't set header value (header: {header}, value: {value}):\n{error}")]
-    InvalidHeaderValue {
-        header: String,
-        value: String,
-        error: reqwest::header::InvalidHeaderValue,
-    },
-    #[error("An error has occured while creating the http client. {error}")]
-    HttpClientBuilderError {
-        error: reqwest::Error
-    },
-    #[error("An error has occured while parsing the response from the server. {error}\nNear: {surroundings:?}")]
+
+#[derive(Debug)]
+pub enum Error<HttpError: Debug + Send + Sync, CachingError: Debug + Send + Sync> {
+    HttpError(HttpError),
+    CachingError(CachingError),
+    CacheConversionError(serde_json::Error),
+    RequestParsingError(http::Error),
+    InvalidHeaderValue(http::header::InvalidHeaderValue),
     ParsingError { error: serde_json::Error, surroundings: Option<String>, body: Option<String> },
+    ConversionError { error: serde_json::Error },
 }
 
 
 
+impl<HttpError: StdError + Debug + Send + Sync, CachingError: StdError + Debug + Send + Sync> Display for Error<HttpError, CachingError> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self {
+            Error::InvalidHeaderValue(error) => write!(f, "InvalidHeaderValue: {error}"),
+            Error::RequestParsingError(error) => write!(f, "RequestParsingError: {}", error),
+            Error::CacheConversionError(error) => write!(f, "Couldn't convert cache entry: {}", error),
+            Error::ParsingError { error, surroundings: Some(body), body: _ } => write!(f, "ParsingError: {}\nBody: {}", error, body),
+            Error::ParsingError { error, surroundings: None, body: _ } => write!(f, "ParsingError: {}", error),
+            Error::ConversionError { error } => write!(f, "Couldn't convert value to json ({})", error),
+            Error::HttpError(error) => write!(f, "HttpError: {error}"),
+            Error::CachingError(error) => write!(f, "CachingError: {error}"),
 
+        }
+    }
+}
+
+use std::error::Error as StdError;
+
+
+impl<HttpError: StdError + Debug + Send + Sync, CachingError: StdError + Debug + Send + Sync> StdError for Error<HttpError, CachingError> {}
+
+pub trait ErrorTrait {
+    type Error;
+}

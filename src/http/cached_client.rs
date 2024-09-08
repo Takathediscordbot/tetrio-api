@@ -1,602 +1,731 @@
+
+use std::fmt::Display;
+use std::marker::PhantomData;
+use std::str::FromStr;
 use std::sync::Arc;
-
-use moka::future::Cache;
-
-use super::client::{fetch_full_league_leaderboard, fetch_general_activity, fetch_general_stats, fetch_latest_news, fetch_league_leaderboard, fetch_news, fetch_stream, fetch_tetra_league_recent, fetch_user_info, fetch_user_records, fetch_xp_leaderboard, search_user};
-use super::value_bound_query::ValueBoundQuery;
+use std::time::Duration;
+use async_lock::Mutex;
+use bytes::{Buf, Bytes};
+use futures::FutureExt;
+use futures_core::future::BoxFuture;
+use http::{HeaderValue, Request};
+use serde::de::DeserializeOwned;
+use serde::Serialize;
+use url::Url;
+use super::caches::cache::CacheHandler;
+use super::error::{Error, ErrorTrait};
+use super::clients::http_client::HttpClient;
+use super::parameters::leaderboard_query::LeaderboardType;
+use super::parameters::personal_user_records::{PersonalLeaderboard, PersonalRecordsQuery};
+use super::parameters::value_bound_query::ValueBoundQuery;
+use crate::models::general::achivement_info::AchievementInfoPacket;
 use crate::models::general::activity::ActivityPacket;
 use crate::models::general::stats::StatsPacket;
+use crate::models::labs::league_ranks::LeagueRanksPacket;
+use crate::models::labs::leagueflow::LeagueFlowPacket;
+use crate::models::labs::scoreflow::ScoreFlowPacket;
 use crate::models::news::latest::LatestNewsPacket;
 use crate::models::news::NewsPacket;
-use crate::models::packet::{Packet, CacheExpiration};
-use crate::models::streams::league_stream::LeagueStream;
-use crate::models::streams::stream::StreamPacket;
-use crate::models::users::lists::league::LeaguePacket;
-use crate::models::users::lists::league_full::LeagueFullPacket;
-use crate::models::users::lists::xp::XpPacket;
+use crate::models::packet::{Packet, SuccessPacket};
+use crate::models::users::summaries::{AchievementsSummaryPacket, AllSummariesPacket, BlitzSummaryPacket, LeagueSummaryPacket, SprintSummaryPacket, ZenSummaryPacket, ZenithExSummaryPacket, ZenithSummaryPacket};
+use crate::models::users::user_history_leaderboard::HistoricalLeaderboardPacket;
 use crate::models::users::user_info::UserInfoPacket;
-use crate::models::users::user_records::UserRecordsPacket;
+use crate::models::users::user_leaderboard::LeaderboardPacket;
+use crate::models::users::user_records::{PersonalBlitzRecordPacket, PersonalLeagueRecordPacket, PersonalSprintRecordPacket, PersonalZenithExRecordPacket, PersonalZenithRecordPacket};
 use crate::models::users::user_search::UserSearchPacket;
-use super::error::Error;
+use futures::future::Either;
+use tower::Service;
+use tower_util::ServiceExt;
 
-/// A TETR.IO Client that automatically caches request results
-pub struct CachedClient {
-    general_stats_cache: Cache<(), Arc<StatsPacket>>,
-    general_activity_cache: Cache<(), Arc<ActivityPacket>>,
-    user_info_cache: Cache<Box<str>, Arc<UserInfoPacket>>,
-    user_records_cache: Cache<Box<str>, Arc<UserRecordsPacket>>,
-    user_search_cache: Cache<Box<str>, Arc<UserSearchPacket>>,
-    full_league_leaderboard_cache: Cache<Option<Box<str>>, Arc<LeagueFullPacket>>,
-    xp_leaderboard_cache: Cache<ValueBoundQuery, Arc<XpPacket>>,
-    league_leaderboard_cache: Cache<ValueBoundQuery, Arc<LeaguePacket>>,
-    stream_cache: Cache<Box<str>, Arc<StreamPacket>>,
-    league_stream_cache: Cache<Box<str>, Arc<Packet<LeagueStream>>>,
-    news_cache: Cache<Option<i64>, Arc<NewsPacket>>,
-    latest_news_cache: Cache<(Box<str>, Option<i64>), Arc<LatestNewsPacket>>,
+pub struct CachedClient<HttpClientImpl: HttpClient, Cache: CacheHandler<HttpClientImpl::HttpError>> {
+    req_service: Mutex<Box<dyn Send + Sync + Service< Request<Vec<u8>>, Response = Bytes, Error = HttpClientImpl::HttpError, Future = BoxFuture<'static, Result<Bytes, HttpClientImpl::HttpError>>>>>,
+    cache_handler: Cache,
+    _phantom: PhantomData<HttpClientImpl>,
 }
 
-impl Default for CachedClient {
+impl<HttpClientImpl: HttpClient + Default, Cache: CacheHandler<HttpClientImpl::HttpError> + Default> Default for CachedClient<HttpClientImpl, Cache> {
     fn default() -> Self {
-        Self { 
-            general_stats_cache: Cache::builder().expire_after(CacheExpiration).build(),
-            general_activity_cache: Cache::builder().expire_after(CacheExpiration).build(),
-            user_info_cache: Cache::builder().expire_after(CacheExpiration).build(),
-            user_records_cache: Cache::builder().expire_after(CacheExpiration).build(),
-            user_search_cache: Cache::builder().expire_after(CacheExpiration).build(),
-            league_leaderboard_cache: Cache::builder().expire_after(CacheExpiration).build(),
-            xp_leaderboard_cache: Cache::builder().expire_after(CacheExpiration).build(),
-            full_league_leaderboard_cache: Cache::builder().expire_after(CacheExpiration).build(),
-            stream_cache: Cache::builder().expire_after(CacheExpiration).build(),
-            news_cache: Cache::builder().expire_after(CacheExpiration).build(),
-            latest_news_cache: Cache::builder().expire_after(CacheExpiration).build(),
-            league_stream_cache: Cache::builder().expire_after(CacheExpiration).build()
-        }
+        return Self::new(HttpClientImpl::default(), Cache::default())
     }
 }
 
 
-impl CachedClient {
+impl<HttpClientImpl: HttpClient, Cache: CacheHandler<HttpClientImpl::HttpError>> CachedClient<HttpClientImpl, Cache> {
+    pub fn new(client: HttpClientImpl, cache_handler: Cache) -> Self {
+            let client = Arc::new(client);
+            let svc = tower::ServiceBuilder::new()
+                .rate_limit(1, Duration::new(1, 0)) // 1 requests every 1 seconds
+                .service(tower::service_fn(move |request| {
+                    let clone_client = client.clone();
+                    async move {
+                        clone_client.execute(request).await
+                    }.boxed()
+                }));
 
-    /// # Examples
-    /// 
-    /// ```
-    /// use tetrio_api::http::client;
-    /// # use tetrio_api::delay_test;
-    /// # tokio_test::block_on(async {
-    /// # delay_test();
-    /// let packet = client::fetch_general_stats().await.unwrap();
-    /// 
-    /// assert!(packet.success && packet.data.is_some() && packet.error.is_none());
-    /// 
-    /// let general_stats = packet.data.unwrap();
-    /// # });
-    /// ```
-    pub async fn fetch_general_stats(&self) -> Result<Arc<StatsPacket>, Error> {
-        if let Some(data) = self.general_stats_cache.get(&()).await {
-            return Ok(Arc::clone(&data));
-        }
-
-        let data = fetch_general_stats().await;
-        let result = data.map(Arc::new);
-        let Ok(data) = result else {
-            return result;
-        };
-
-        if data.is_success() {
-            self.general_stats_cache.insert((), Arc::clone(&data)).await;
-        }
-        
-        Ok(data)
+            CachedClient {
+                req_service: Mutex::new(Box::new(svc)),
+                cache_handler,
+                _phantom: PhantomData::default(),
+            }
     }
 
-    /// # Examples
-    /// 
-    /// ```
-    /// use tetrio_api::http::client;
-    /// # use tetrio_api::delay_test;
-    /// # tokio_test::block_on(async {
-    /// # delay_test();
-    /// let packet = client::fetch_general_activity().await.unwrap();
-    /// 
-    /// assert!(packet.success && packet.data.is_some() && packet.error.is_none());
-    /// 
-    /// let general_activity = packet.data.unwrap();
-    /// # });
-    /// ```
-    pub async fn fetch_general_activity(&self) -> Result<Arc<ActivityPacket>, Error> {
-        if let Some(data) = self.general_activity_cache.get(&()).await {
-            return Ok(Arc::clone(&data));
-        }
+}
 
-        let data = fetch_general_activity().await;
-        let result = data.map(Arc::new);
-        let Ok(data) = result else {
-            return result;
-        };
 
-        if data.is_success() {
-            self.general_activity_cache.insert((), Arc::clone(&data)).await;
-        }
-        
-        Ok(data)
+
+
+pub const TETRIO_API_URL: &str = "https://ch.tetr.io/api/";
+
+impl<HttpClientImpl: HttpClient + Send + Sync, Cache: CacheHandler<HttpClientImpl::HttpError>> ErrorTrait for CachedClient<HttpClientImpl, Cache> {
+    type Error = Error<HttpClientImpl::HttpError, Cache::CachingError>;
+}
+
+impl<HttpClientImpl: HttpClient + Send + Sync, Cache: CacheHandler<HttpClientImpl::HttpError>> CachedClient<HttpClientImpl, Cache> {
+
+   
+    pub(crate) async fn parse_body<T: DeserializeOwned>(body: Bytes) -> Result<T, <Self as ErrorTrait>::Error> {
+
+        Ok(serde_json::from_reader::<_, T>(body.clone().reader()).map_err(|err| {
+            let body = String::from_utf8(body.to_vec()).ok().map(|body| {
+                (body.chars().skip(err.column().checked_sub(40).unwrap_or(0)).take(40).collect::<String>(), body)
+            });
+
+            match body {
+                Some((surroundings, body)) => Error::ParsingError { error: err, surroundings: Some(surroundings), body: Some(body) },
+                None => Error::ParsingError { error: err, surroundings: None, body: None }
+            }
+        })?)
     }
-    
-    /// # Examples
-    /// 
-    /// Valid user:
-    /// ```
-    /// use tetrio_api::http::cached_client::CachedClient;
-    /// # use tetrio_api::delay_test;
-    /// # tokio_test::block_on(async {
-    /// # delay_test();
-    /// let client = CachedClient::default();
-    /// let packet = client.fetch_user_info("promooooooo").await.unwrap(); // Returns an Arc
-    /// 
-    /// assert!(packet.success && packet.data.is_some() && packet.error.is_none());
-    /// 
-    /// let user_data = packet.data.as_ref().unwrap();
-    /// 
-    /// dbg!(&user_data.user.username);
-    /// # });
-    /// ```
-    /// Invalid user:
-    /// ```
-    /// use tetrio_api::http::cached_client::CachedClient;
-    /// # tokio_test::block_on(async {
-    /// let client = CachedClient::default();
-    /// let packet = client.fetch_user_info("KAZEOIJAIZDHIQSUDH").await.unwrap();
-    /// 
-    /// assert!(!packet.success && packet.data.is_none() && packet.error.is_some());
-    /// 
-    /// let error = packet.error.as_ref().unwrap();
-    /// 
-    /// dbg!(&error);
-    /// # });
-    /// ```
-    pub async fn fetch_user_info(&self, user: &str) -> Result<Arc<UserInfoPacket>, Error> {
-        let user_boxed = user.to_lowercase().into_boxed_str();
-        if let Some(data) = self.user_info_cache.get(&user_boxed).await {
-            return Ok(Arc::clone(&data));
-        }
 
-        let data = fetch_user_info(user).await;
-
-        let result = data.map(Arc::new);
-        let Ok(data) = result else {
-            return result;
+    pub fn make_url<T: Display>(href: &str, query_params: &[[T; 2]]) -> String {
+        let mut url = match Url::from_str(&format!("{TETRIO_API_URL}{href}")) {
+            Ok(v) => v,
+            Err(_) => unreachable!() // TETRIO_API_URL HAS TO BE VALID for ANYTHING to work.
         };
-
-        if data.is_success() {
-            self.user_info_cache.insert(user_boxed, Arc::clone(&data)).await;
-        }
-        
-        Ok(data)
-    }
-    
-    /// # Examples
-    /// 
-    /// Valid user:
-    /// ```
-    /// use tetrio_api::http::cached_client::CachedClient;
-    /// # use tetrio_api::delay_test;
-    /// # tokio_test::block_on(async {
-    /// # delay_test();
-    /// let client = CachedClient::default();
-    /// let packet = client.fetch_user_records("takathedinosaur").await.unwrap(); // Returns an Arc
-    /// 
-    /// assert!(packet.success && packet.data.is_some() && packet.error.is_none());
-    /// 
-    /// let user_data = packet.data.as_ref().unwrap();
-    /// 
-    /// dbg!(&user_data.records.blitz);
-    /// # });
-    /// ```
-    /// Invalid user:
-    /// ```
-    /// use tetrio_api::http::cached_client::CachedClient;
-    /// # use tetrio_api::delay_test;
-    /// # tokio_test::block_on(async {
-    /// # delay_test();
-    /// let client = CachedClient::default();
-    /// let packet = client.fetch_user_records("KAZEOIJAIZDHIQSUDH").await.unwrap();
-    /// 
-    /// assert!(!packet.success && packet.data.is_none() && packet.error.is_some());
-    /// 
-    /// let error = packet.error.as_ref().unwrap();
-    /// 
-    /// dbg!(&error);
-    /// # });
-    /// ```
-    pub async fn fetch_user_records(&self, user: &str) -> Result<Arc<UserRecordsPacket>, Error> {
-        let user_boxed = user.to_lowercase().into_boxed_str();
-        if let Some(data) = self.user_records_cache.get(&user_boxed.clone()).await {
-            return Ok(Arc::clone(&data));
-        }
-
-        let data = fetch_user_records(user).await;
-
-        let result = data.map(Arc::new);
-        let Ok(data) = result else {
-            return result;
-        };
-
-        if data.is_success() {
-            self.user_records_cache.insert(user_boxed, Arc::clone(&data)).await;
-        }
-        
-        Ok(data)
-    }
     
     
-    /// # Examples
-    /// 
-    /// Valid user:
-    /// ```
-    /// use tetrio_api::http::cached_client::CachedClient;
-    /// # use tetrio_api::delay_test;
-    /// # tokio_test::block_on(async {
-    /// # delay_test();
-    /// let client = CachedClient::default();
-    /// let packet = client.search_user("434626996262273038").await.unwrap();
-    /// 
-    /// assert!(packet.success && packet.data.is_some() && packet.error.is_none());
-    /// 
-    /// let user_data = packet.data.as_ref().unwrap();
-    /// 
-    /// dbg!(&user_data.user.username);
-    /// # });
-    /// ```
-    /// Invalid user:
-    /// ```
-    /// use tetrio_api::http::cached_client::CachedClient;
-    /// # tokio_test::block_on(async {
-    /// let client = CachedClient::default();
-    /// let packet = client.search_user("abc").await.unwrap();
-    /// 
-    /// assert!(packet.success && packet.data.is_none());
-    /// # });
-    /// ```
-    pub async fn search_user(&self, query: &str) -> Result<Arc<UserSearchPacket>, Error> {
-        let query_boxed = query.into();
-        if let Some(data) = self.user_search_cache.get(&query_boxed).await {
-            return Ok(Arc::clone(&data));
+        {
+            let mut query = url.query_pairs_mut();
+    
+            for pair in query_params {
+                query.append_pair(&pair[0].to_string(), &pair[1].to_string());
+            };
+    
+            query.finish();
         }
-
-        let data = search_user(query).await;
-
-        let result = data.map(Arc::new);
-        let Ok(data) = result else {
-            return result;
-        };
-
-        if data.is_success() {
-            self.user_search_cache.insert(query_boxed, Arc::clone(&data)).await;
-        }
-        
-        Ok(data)
+    
+    
+    
+        return dbg!(url.to_string().replacen(TETRIO_API_URL, "", 1));
     }
-    /// # Examples
-    /// 
-    /// Specify an upper bound:
-    /// ```
-    /// use tetrio_api::http::{cached_client::CachedClient, value_bound_query::ValueBoundQuery};
-    /// use ordered_float::OrderedFloat;
-    /// # use tetrio_api::delay_test;
-    /// # tokio_test::block_on(async {
-    /// # delay_test();
-    /// let client = CachedClient::default();
-    /// let packet = client.fetch_league_leaderboard(ValueBoundQuery::After {
-    ///     after: OrderedFloat(22000.50), // All users will be below 22000.50, max value is 25000
-    ///     limit: Some(50), // Value between 1 and 100
-    ///     country: Some("fr".to_string()), // A country code
-    ///     session_id: Some("AZERTYUIOP".to_string()) // A session ID, mainly used for scrolling
-    /// }).await.unwrap();
-    /// 
-    /// assert!(packet.success && packet.data.is_some() && packet.error.is_none());
-    /// 
-    /// let league_data = packet.data.as_ref().unwrap();
-    /// 
-    /// dbg!(league_data.users.len());
-    /// # });
-    /// ```
-    /// Specify a lower bound: 
-    /// ```
-    /// use tetrio_api::http::{cached_client::CachedClient, value_bound_query::ValueBoundQuery};
-    /// use ordered_float::OrderedFloat;
-    /// # use tetrio_api::delay_test;
-    /// # tokio_test::block_on(async {
-    /// # delay_test();
-    /// let client = CachedClient::default();
-    /// let packet = client.fetch_league_leaderboard(ValueBoundQuery::Before {
-    ///     before: OrderedFloat(22000.50), // All users will be higher than 22000.50, max value is 25000
-    ///     limit: Some(50), // Value between 1 and 100
-    ///     country: Some("fr".to_string()), // A country code
-    ///     session_id: Some("AZERTYUIOP".to_string()) // A session ID, mainly used for scrolling 
-    /// }).await.unwrap();
-    /// 
-    /// assert!(packet.success && packet.data.is_some() && packet.error.is_none());
-    /// 
-    /// let league_data = packet.data.as_ref().unwrap();
-    /// 
-    /// dbg!(league_data.users.len());
-    /// # });
-    /// ```
-    /// Specify a limit without an upper or lower value bound: 
-    /// ```
-    /// use tetrio_api::http::{cached_client::CachedClient, value_bound_query::ValueBoundQuery};
-    /// use ordered_float::OrderedFloat;
-    /// # use tetrio_api::delay_test;
-    /// # tokio_test::block_on(async {
-    /// # delay_test();
-    /// let client = CachedClient::default();
-    /// let packet = client.fetch_league_leaderboard(ValueBoundQuery::NotBound {
-    ///     limit: Some(50), // Value between 1 and 100
-    ///     country: Some("fr".to_string()) // A country code
-    /// }).await.unwrap();
-    /// 
-    /// assert!(packet.success && packet.data.is_some() && packet.error.is_none());
-    /// 
-    /// let league_data = packet.data.as_ref().unwrap();
-    /// 
-    /// dbg!(league_data.users.len());
-    /// # });
-    /// ```
-    /// Specify no settings:
-    /// ```
-    /// use tetrio_api::http::{cached_client::CachedClient, value_bound_query::ValueBoundQuery};
-    /// use ordered_float::OrderedFloat;
-    /// # use tetrio_api::delay_test;
-    /// # tokio_test::block_on(async {
-    /// # delay_test();
-    /// let client = CachedClient::default();
-    /// let packet = client.fetch_league_leaderboard(ValueBoundQuery::None).await.unwrap();
-    /// 
-    /// assert!(packet.success && packet.data.is_some() && packet.error.is_none());
-    /// 
-    /// let league_data = packet.data.as_ref().unwrap();
-    /// 
-    /// dbg!(league_data.users.len());
-    /// # });
-    /// ```
-    pub async fn fetch_league_leaderboard(&self, query: ValueBoundQuery) -> Result<Arc<LeaguePacket>, Error> {
-        if let Some(data) = self.league_leaderboard_cache.get(&query).await {
-            return Ok(Arc::clone(&data));
-        }
 
-        
-        
-        let data = fetch_league_leaderboard(query.clone()).await;
-        let result = data.map(Arc::new);
-        let Ok(data) = result else {
-            return result;
+    pub async fn make_request<T: DeserializeOwned + Serialize>(&self, url: &str, session_id: &Option<&str>) -> Result<T, <Self as ErrorTrait>::Error>  {
+        let req = Request::builder()
+                        .method(http::Method::GET)
+                        .uri(url);
+
+        let req = if let Some(session_id) = session_id {
+            req.header("X-SESSION-ID", HeaderValue::from_str(session_id).map_err(Error::InvalidHeaderValue)?)
+        } else {
+            req
         };
-
-        if data.is_success() {
-            self.league_leaderboard_cache.insert(query, Arc::clone(&data)).await;
-        }
         
-        Ok(data)
+
+        let mut service = self.req_service.lock().await;
+
+        let response = service.ready_and().await.map_err(Error::HttpError)?.call(req.body(vec![]).map_err(Error::RequestParsingError)?).await.map_err(Error::HttpError)?;
+
+        
+
+        Self::parse_body::<T>(
+            response
+        ).await
     }
-    /// # Examples
-    /// ```
-    /// use tetrio_api::http::cached_client::CachedClient;
-    /// # use tetrio_api::delay_test;
-    /// # tokio_test::block_on(async {
-    /// # delay_test();
-    /// let client = CachedClient::default();
-    /// let packet = client.fetch_full_league_leaderboard(Some("fr")).await.unwrap();
-    /// 
-    /// assert!(packet.success && packet.data.is_some() && packet.error.is_none());
-    /// 
-    /// let league_data = packet.data.as_ref().unwrap();
-    /// 
-    /// # });
-    /// ```
-    pub async fn fetch_full_league_leaderboard(
-        &self,
-        country: Option<&str>,
-    ) -> Result<Arc<LeagueFullPacket>, Error> {
-        let country_boxed = country.map(|c| c.to_uppercase().into());
-        if let Some(data) = self.full_league_leaderboard_cache.get(&country_boxed).await {
-            return Ok(Arc::clone(&data));
+
+    pub async fn cache_value_if_success<T: DeserializeOwned + Serialize + Send + Sync>(&self, cache_key: String, r: Packet<T>) -> Result<bool, <Self as ErrorTrait>::Error> {
+        let Packet { success, cache, data, .. } = r;
+        match (cache, success, data) {
+            (Some(cache), true, Some(data)) => {
+                self.cache_handler.cache_value(&cache_key, SuccessPacket { success: true, cache, data }).await?;
+
+                Ok(true)
+            }
+            _ => { Ok(false) }
         }
+    }
+
+    pub(crate) fn get_url(route: impl Display) -> String {
+        format!("{TETRIO_API_URL}{route}")
+    }
+
+    pub(crate) fn get_cache_key(url: &str, session_id: &Option<&str>) -> String {
+        format!("{url}&X_SESSION_ID={session_id:?}")
+    }
+
+    pub async fn make_tetrio_api_request<T: DeserializeOwned + Serialize + Send + Sync + Clone>(&self, route: impl Display, session_id: Option<&str>) -> Result<Packet<T>, <Self as ErrorTrait>::Error> {
+        let url = Self::get_url(route);
+        let cache_key = Self::get_cache_key(&url, &session_id);
+        dbg!(&url);
+        let response = self.cache_handler.try_get_cache(&cache_key).await?;
+        response.map_or_else(|| Either::Left(async {
+            let packet = self.make_request::<Packet<T>>(&url, &session_id).await;
+            dbg!(packet.is_ok());
+            // ignore error because we don't care if it's not cached
+            let _ = match &packet {
+                Ok(value) => {self.cache_value_if_success(cache_key, value.clone()).await},
+                _ => { return packet; }
+            };
+
+            return packet;
+        }), |value| Either::Right(async move { Ok(value) })).await
+    }
+
+    pub async fn cache_tetrio_api_result_if_not_present<T: DeserializeOwned + Serialize + Clone + Send + Sync>(&self, route: impl Display, session_id: Option<&str>, packet: serde_json::Value) -> Result<Packet<T>, <Self as ErrorTrait>::Error> {
+        let url = Self::get_url(route);
+        let cache_key = Self::get_cache_key(&url, &session_id);
+    
+        let response = self.cache_handler.try_get_cache(&cache_key).await?;
+        response.map_or_else(|| Either::Left(async {
+            let packet = serde_json::from_value::<Packet<T>>(packet).map_err(|e| Error::ConversionError { error: e });
+            
+            // ignore error because we don't care if it's not cached
+            let _ = match &packet {
+                Ok(value) => {self.cache_value_if_success(cache_key, value.clone()).await},
+                _ => { return packet; }
+            };
+
+            return packet;
+        }), |value| Either::Right(async move { Ok(value) })).await
+    }
+
+    pub async fn get_from_cache<T: DeserializeOwned + Serialize + Clone + Send + Sync>(&self, route: impl Display, session_id: Option<&str>) -> Result<Option<Packet<T>>, <Self as ErrorTrait>::Error> {
+        let url = Self::get_url(route);
+        let cache_key = Self::get_cache_key(&url, &session_id);
+    
+        self.cache_handler.try_get_cache(&cache_key).await
+    }
 
 
-        let data = fetch_full_league_leaderboard(country).await;
-        let result = data.map(Arc::new);
-        let Ok(data) = result else {
-            return result;
-        };
 
-        if data.is_success() {
-            self.full_league_leaderboard_cache.insert(country_boxed, Arc::clone(&data)).await;
-        }
-        
-        Ok(data)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    pub async fn fetch_general_stats(&self) -> Result<StatsPacket, <Self as ErrorTrait>::Error> {
+        return self.make_tetrio_api_request("general/stats", None).await;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    pub async fn fetch_general_activity(&self) -> Result<ActivityPacket, <Self as ErrorTrait>::Error> {
+        return self.make_tetrio_api_request("general/activity", None).await;
+
     }
     
-    /// # Examples
-    /// 
-    /// Specify an upper bound:
-    /// ```
-    /// use tetrio_api::http::{cached_client::CachedClient, value_bound_query::ValueBoundQuery};
-    /// use ordered_float::OrderedFloat;
-    /// # use tetrio_api::delay_test;
-    /// # tokio_test::block_on(async {
-    /// # delay_test();
-    /// let client = CachedClient::default();
-    /// let packet = client.fetch_xp_leaderboard(ValueBoundQuery::After {
-    ///     after: OrderedFloat(22000.50), // All users will be below 22000.50 xp
-    ///     limit: Some(50), // Value between 1 and 100
-    ///     country: Some("fr".to_string()), // A country code
-    ///     session_id: Some("AZERTYUIOP".to_string()) // A session ID, mainly used for scrolling
-    /// }).await.unwrap();
-    /// 
-    /// assert!(packet.success && packet.data.is_some() && packet.error.is_none());
-    /// 
-    /// let xp_data = packet.data.as_ref().unwrap();
-    /// 
-    /// dbg!(xp_data.users.len())
-    /// # });
-    /// ```
-    /// Specify a lower bound: 
-    /// ```
-    /// use tetrio_api::http::{cached_client::CachedClient, value_bound_query::ValueBoundQuery};
-    /// use ordered_float::OrderedFloat;
-    /// # use tetrio_api::delay_test;
-    /// # tokio_test::block_on(async {
-    /// # delay_test();
-    /// let client = CachedClient::default();
-    /// let packet = client.fetch_xp_leaderboard(ValueBoundQuery::Before {
-    ///     before: OrderedFloat(22000.50), // All users will be higher than 22000.50 xp
-    ///     limit: Some(50), // Value between 1 and 100
-    ///     country: Some("fr".to_string()), // A country code
-    ///     session_id: Some("AZERTYUIOP".to_string()) // A session ID, mainly used for scrolling
-    /// }).await.unwrap();
-    /// 
-    /// assert!(packet.success && packet.data.is_some() && packet.error.is_none());
-    /// 
-    /// let xp_data = packet.data.as_ref().unwrap();
-    /// 
-    /// dbg!(xp_data.users.len());
-    /// # });
-    /// ```
-    /// Specify a limit without an upper or lower value bound: 
-    /// ```
-    /// use tetrio_api::http::{cached_client::CachedClient, value_bound_query::ValueBoundQuery};
-    /// use ordered_float::OrderedFloat;
-    /// # use tetrio_api::delay_test;
-    /// # tokio_test::block_on(async {
-    /// # delay_test();
-    /// let client = CachedClient::default();
-    /// let packet = client.fetch_xp_leaderboard(ValueBoundQuery::NotBound {
-    ///     limit: Some(50), // Value between 1 and 100
-    ///     country: Some("fr".to_string()) // A country code
-    /// }).await.unwrap();
-    /// 
-    /// assert!(packet.success && packet.data.is_some() && packet.error.is_none());
-    /// 
-    /// let xp_data = packet.data.as_ref().unwrap();
-    /// 
-    /// dbg!(xp_data.users.len());
-    /// # });
-    /// ```
-    /// Specify no settings:
-    /// ```
-    /// use tetrio_api::http::{cached_client::CachedClient, value_bound_query::ValueBoundQuery};
-    /// use ordered_float::OrderedFloat;
-    /// # use tetrio_api::delay_test;
-    /// # tokio_test::block_on(async {
-    /// # delay_test();
-    /// let client = CachedClient::default();
-    /// let packet = client.fetch_xp_leaderboard(ValueBoundQuery::None).await.unwrap();
-    /// 
-    /// assert!(packet.success && packet.data.is_some() && packet.error.is_none());
-    /// 
-    /// let xp_data = packet.data.as_ref().unwrap();
-    /// 
-    /// dbg!(xp_data.users.len());
-    /// # });
-    /// ```
-    pub async fn fetch_xp_leaderboard(&self, query: ValueBoundQuery) -> Result<Arc<XpPacket>, Error> {
-        if let Some(data) = self.xp_leaderboard_cache.get(&query).await {
-            return Ok(Arc::clone(&data));
-        }
 
-        let data = fetch_xp_leaderboard(query.clone()).await;
-        let result = data.map(Arc::new);
-        let Ok(data) = result else {
-            return result;
-        };
 
-        if data.is_success() {
-            self.xp_leaderboard_cache.insert(query, Arc::clone(&data)).await;
-        }
-        
-        Ok(data)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    pub async fn fetch_user_info(&self, user: &str) -> Result<UserInfoPacket, <Self as ErrorTrait>::Error> {
+        self.make_tetrio_api_request(format!("users/{user}"), None).await
     }
     
-    pub async fn fetch_stream(&self, stream: &str) -> Result<Arc<StreamPacket>, Error> {
-        let stream_boxed = stream.into();
-        if let Some(data) = self.stream_cache.get(&stream_boxed).await {
-            return Ok(Arc::clone(&data));
-        }
 
-        let data = fetch_stream(stream).await;
-        let result = data.map(Arc::new);
-        let Ok(data) = result else {
-            return result;
-        };
 
-        if data.is_success() {
-            self.stream_cache.insert(stream_boxed, Arc::clone(&data)).await;
-        }
-        
-        Ok(data)
-        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    pub async fn fetch_user_summaries(&self, user: &str) -> Result<AllSummariesPacket, <Self as ErrorTrait>::Error> {
+        self.make_tetrio_api_request(format!("users/{user}/summaries"), None).await
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    pub async fn fetch_user_zen_summaries(&self, user: &str) -> Result<ZenSummaryPacket, <Self as ErrorTrait>::Error> {
+        self.make_tetrio_api_request(format!("users/{user}/summaries/zen"), None).await
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    pub async fn fetch_user_league_summaries(&self, user: &str) -> Result<LeagueSummaryPacket, <Self as ErrorTrait>::Error> {
+        self.make_tetrio_api_request(format!("users/{user}/summaries/league"), None).await
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    pub async fn fetch_user_40l_summaries(&self, user: &str) -> Result<SprintSummaryPacket, <Self as ErrorTrait>::Error> {
+        self.make_tetrio_api_request(format!("users/{user}/summaries/40l"), None).await
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    pub async fn fetch_user_blitz_summaries(&self, user: &str) -> Result<BlitzSummaryPacket, <Self as ErrorTrait>::Error> {
+        self.make_tetrio_api_request(format!("users/{user}/summaries/blitz"), None).await
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    pub async fn fetch_user_zenith_summaries(&self, user: &str) -> Result<ZenithSummaryPacket, <Self as ErrorTrait>::Error> {
+        self.make_tetrio_api_request(format!("users/{user}/summaries/zenith"), None).await
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    pub async fn fetch_user_zenithex_summaries(&self, user: &str) -> Result<ZenithExSummaryPacket, <Self as ErrorTrait>::Error> {
+        self.make_tetrio_api_request(format!("users/{user}/summaries/zenithex"), None).await
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    pub async fn fetch_user_achievements_summaries(&self, user: &str) -> Result<AchievementsSummaryPacket, <Self as ErrorTrait>::Error> {
+        self.make_tetrio_api_request(format!("users/{user}/summaries/achievements"), None).await
     }
     
-    pub async fn fetch_news(&self, limit: Option<i64>) -> Result<Arc<NewsPacket>, Error> {
+    
 
-        if let Some(data) = self.news_cache.get(&limit).await {
-            return Ok(Arc::clone(&data));
-        }
-        
-        let data = fetch_news(limit).await;
 
-        let result = data.map(Arc::new);
-        let Ok(data) = result else {
-            return result;
-        };
 
-        if data.is_success() {
-            self.news_cache.insert(limit, Arc::clone(&data)).await;
-        }
-        
-        Ok(data)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    pub async fn search_discord_user(&self, query: &str) -> Result<UserSearchPacket, <Self as ErrorTrait>::Error> {
+
+
+        self.make_tetrio_api_request(format!("users/search/discord:{query}"), None).await
+    }
+
+    pub async fn fetch_leaderboard(&self,
+                                   leaderboard_type: LeaderboardType,
+                                   query: ValueBoundQuery,
+                                   session_id: Option<&str>) -> Result<LeaderboardPacket, <Self as ErrorTrait>::Error> {
+        let url = format!("users/by/{}", leaderboard_type.to_string());
+        self.make_tetrio_api_request(Self::make_url(&url, &query.as_query_params()), session_id).await
+    }
+
+    pub async fn fetch_historical_leaderboard(&self,
+                                   leaderboard_type: LeaderboardType,
+                                   season: String,
+                                   query: ValueBoundQuery,
+                                   session_id: Option<&str>) -> Result<HistoricalLeaderboardPacket, <Self as ErrorTrait>::Error> {
+        let url = format!("users/history/{}/{}", leaderboard_type.to_string(), season);
+        self.make_tetrio_api_request(Self::make_url(&url, &query.as_query_params()), session_id).await
+    }
+
+    pub async fn fetch_user_personal_40l_records(&self,
+                                             user: &str,
+                                             leaderboard: PersonalLeaderboard,
+                                             query: PersonalRecordsQuery) -> Result<PersonalSprintRecordPacket, <Self as ErrorTrait>::Error> {
+        let url = format!("users/{}/records/{}/{}", user, "40l", leaderboard.to_string());
+
+        self.make_tetrio_api_request(Self::make_url(&url, &query.as_query_params()), None).await
+    }
+
+    pub async fn fetch_user_personal_blitz_records(&self,
+                                             user: &str,
+                                             leaderboard: PersonalLeaderboard,
+                                             query: PersonalRecordsQuery) -> Result<PersonalBlitzRecordPacket, <Self as ErrorTrait>::Error> {
+        let url = format!("users/{}/records/{}/{}", user, "blitz", leaderboard.to_string());
+
+        self.make_tetrio_api_request(Self::make_url(&url, &query.as_query_params()), None).await
+    }
+
+    pub async fn fetch_user_personal_league_records(&self,
+                                             user: &str,
+                                             leaderboard: PersonalLeaderboard,
+                                             query: PersonalRecordsQuery) -> Result<PersonalLeagueRecordPacket, <Self as ErrorTrait>::Error> {
+        let url = format!("users/{}/records/{}/{}", user, "league", leaderboard.to_string());
+
+        self.make_tetrio_api_request(Self::make_url(&url, &query.as_query_params()), None).await
+    }
+
+    pub async fn fetch_user_personal_zenith_records(&self,
+                                             user: &str,
+                                             leaderboard: PersonalLeaderboard,
+                                             query: PersonalRecordsQuery) -> Result<PersonalZenithRecordPacket, <Self as ErrorTrait>::Error> {
+        let url = format!("users/{}/records/{}/{}", user, "zenith", leaderboard.to_string());
+
+        self.make_tetrio_api_request(Self::make_url(&url, &query.as_query_params()), None).await
+    }
+
+    pub async fn fetch_user_personal_zenithex_records(&self,
+                                             user: &str,
+                                             leaderboard: PersonalLeaderboard,
+                                             query: PersonalRecordsQuery) -> Result<PersonalZenithExRecordPacket, <Self as ErrorTrait>::Error> {
+        let url = format!("users/{}/records/{}/{}", user, "zenithex", leaderboard.to_string());
+
+        self.make_tetrio_api_request(Self::make_url(&url, &query.as_query_params()), None).await
+    }
+    
+    pub async fn fetch_news(&self, limit: Option<i64>) -> Result<NewsPacket, <Self as ErrorTrait>::Error> {
+        let url = "news/";
+        let limit = limit.map(|l| vec![["limit".to_lowercase(), l.to_string()]]).unwrap_or(vec![]);
+        self.make_tetrio_api_request(Self::make_url(&url, &limit), None).await
+
     }
     
     pub async fn fetch_latest_news(
         &self,
         stream: &str,
         limit: Option<i64>,
-    ) -> Result<Arc<LatestNewsPacket>, Error> {
-        let stream_boxed = stream.to_string().into_boxed_str();
-        if let Some(data) = self.latest_news_cache.get(&(stream_boxed.clone(), limit)).await {
-            return Ok(Arc::clone(&data));
-        }
-
-        let data = fetch_latest_news(stream, limit).await;
-
-        let result = data.map(Arc::new);
-        let Ok(data) = result else {
-            return result;
-        };
-
-        if data.is_success() {
-            self.latest_news_cache.insert((stream_boxed, limit), Arc::clone(&data)).await;
-        }
-        
-        Ok(data)
-    }
-
-    pub async fn fetch_tetra_league_recent(&self, user_id: &str) -> Result<Arc<Packet<LeagueStream>>, Error> {
-        let user_id_boxed = user_id.into();
-        if let Some(data) = self.league_stream_cache.get(&user_id_boxed).await {
-            return Ok(Arc::clone(&data));
-        }
-
-        let data = fetch_tetra_league_recent(user_id).await;
-        let result = data.map(Arc::new);
-        let Ok(data) = result else {
-            return result;
-        };
-
-        if data.is_success() {
-            self.league_stream_cache.insert(user_id_boxed, Arc::clone(&data)).await;
-        }
-        
-        Ok(data)
+    ) -> Result<LatestNewsPacket, <Self as ErrorTrait>::Error> {
+        let url = format!("news/{}", stream);
+        let limit = limit.map(|l| vec![["limit".to_lowercase(), l.to_string()]]).unwrap_or(vec![]);
+        self.make_tetrio_api_request(Self::make_url(&url, &limit), None).await
     }
     
+    pub async fn fetch_scoreflow(&self, user: &str, game_mode: &str) -> Result<ScoreFlowPacket, <Self as ErrorTrait>::Error> {
+        let url = format!("labs/scoreflow/{user}/{game_mode}");
+        self.make_tetrio_api_request(url, None).await
+    }
+
+    pub async fn fetch_leagueflow(&self, user: &str) -> Result<LeagueFlowPacket, <Self as ErrorTrait>::Error> {
+        let url = format!("labs/leagueflow/{user}");
+        self.make_tetrio_api_request(url, None).await
+    }
+
+    pub async fn fetch_leagueranks(&self) -> Result<LeagueRanksPacket, <Self as ErrorTrait>::Error> {
+        let url = format!("labs/league_ranks");
+        self.make_tetrio_api_request(url, None).await
+    }
+
+    pub async fn fetch_achievement_info(&self, achievement: &str) -> Result<AchievementInfoPacket, <Self as ErrorTrait>::Error> {
+        let url = format!("achievements/{achievement}");
+        self.make_tetrio_api_request(url, None).await
+    }
 }
+

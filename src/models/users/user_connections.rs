@@ -1,19 +1,55 @@
 use serde::{Deserialize, Serialize};
 
-/// This user's connection to Discord:
+use crate::models::common::APIstring;
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct DiscordConnection {
-    /// This user's Discord ID.
-    pub id: String,
-    /// This user's Discord Tag.
-    pub username: String
+    pub id: APIstring,
+    pub username: APIstring,
+    pub display_username: APIstring
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
-/// This user's third party connections:
+pub struct TwitchConnection {
+    pub id: APIstring,
+    pub username: APIstring,
+    pub display_username: APIstring
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TwitterConnection {
+    pub id: APIstring,
+    pub username: APIstring,
+    pub display_username: APIstring
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct RedditConnection {
+    pub id: APIstring,
+    pub username: APIstring,
+    pub display_username: APIstring
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct YoutubeConnection {
+    pub id: APIstring,
+    pub username: APIstring,
+    pub display_username: APIstring
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SteamConnection {
+    pub id: APIstring,
+    pub username: APIstring,
+    pub display_username: APIstring
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserConnections {
-    /// This user's connection to Discord:
-    pub discord: Option<DiscordConnection>
+    pub discord: Option<DiscordConnection>,
+    pub twitch: Option<TwitchConnection>,
+    pub twitter: Option<TwitterConnection>,
+    pub reddit: Option<RedditConnection>,
+    pub youtube: Option<YoutubeConnection>,
+    pub steam: Option<SteamConnection>
 }

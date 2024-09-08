@@ -1,51 +1,31 @@
-//! 
-//! [User Records](https://tetr.io/about/api/#usersuserrecords) models 
-
-
-/// The model used for the 40L records of a user.
 pub mod sprint_record;
-/// The model used for the Blitz records of a user.
 pub mod blitz_record;
+pub mod zenith_record;
+pub mod zenithex_record;
+pub mod league_record;
+
+
 
 use serde::{Deserialize, Serialize};
 
+use crate::models::common::APIArray;
 use crate::models::packet::Packet;
 
-/// The user's 40 LINES record:
 pub use self::sprint_record::SprintRecord;
-/// The user's BLITZ record:
 pub use self::blitz_record::BlitzRecord;
+pub use self::zenith_record::ZenithRecord;
+pub use self::zenithex_record::ZenithExRecord;
+pub use self::league_record::LeagueRecord;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 #[serde(deny_unknown_fields)]
-/// The requested user's ranked records:
-pub struct UserRecordsInner {
-    /// The user's 40 LINES record:
-    #[serde(rename = "40l")]
-    pub sprint: SprintRecord,
-    /// The user's BLITZ record:
-    pub blitz: BlitzRecord,
+pub struct PersonalUserRecords<T> {
+    pub entries: APIArray<T>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
-/// The user's ZEN record:
-pub struct UserRecordsZen {
-    /// The user's level in ZEN mode.
-    pub level: i64,
-    /// The user's score in ZEN mode.
-    pub score: i64
-}
+pub type PersonalSprintRecordPacket = Packet<PersonalUserRecords<SprintRecord>>;
+pub type PersonalBlitzRecordPacket = Packet<PersonalUserRecords<BlitzRecord>>;
+pub type PersonalZenithRecordPacket = Packet<PersonalUserRecords<ZenithRecord>>;
+pub type PersonalZenithExRecordPacket = Packet<PersonalUserRecords<ZenithExRecord>>;
+pub type PersonalLeagueRecordPacket = Packet<PersonalUserRecords<LeagueRecord>>;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
-/// An object describing the user's single player records.
-pub struct UserRecords {
-    /// The requested user's ranked records:
-    pub records: UserRecordsInner,
-    /// The user's ZEN record:
-    pub zen: UserRecordsZen,
-}
-
-/// The packet returned by the API when requesting a user's records.
-pub type UserRecordsPacket = Packet<UserRecords>;

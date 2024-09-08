@@ -1,59 +1,42 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
 #[serde(deny_unknown_fields)]
-/// The user's TETRA LEAGUE rank.
 pub enum UserRank {
-    /// TETR.IO X rank
+    #[serde(rename = "x+")]
+    XPlus,
     X,
-    /// TETR.IO U rank
     U,
-    /// TETR.IO SS rank
     SS,
-    /// TETR.IO S+ rank
     #[serde(rename = "s+")]
     SPlus,
-    /// TETR.IO S rank
     #[serde(rename = "s")]
     S,
-    /// TETR.IO S- rank
     #[serde(rename = "s-")]
     SMinus,
-    /// TETR.IO A+ rank
     #[serde(rename = "a+")]
     APlus,
-    /// TETR.IO A rank
     #[serde(rename = "a")]
     A,
-    /// TETR.IO A- rank
     #[serde(rename = "a-")]
     AMinus,
-    /// TETR.IO B+ rank
     #[serde(rename = "b+")]
     BPlus,
-    /// TETR.IO B rank
     #[serde(rename = "b")]
     B,
-    /// TETR.IO B- rank
     #[serde(rename = "b-")]
     BMinus,
-    /// TETR.IO C+ rank
     #[serde(rename = "c+")]
     CPlus,
-    /// TETR.IO C rank
     #[serde(rename = "c")]
     C,
-    /// TETR.IO C- rank
     #[serde(rename = "c-")]
     CMinus,
-    /// TETR.IO D+ rank
     #[serde(rename = "d+")]
     DPlus,
-    /// TETR.IO D rank
     #[serde(rename = "d")]
     D,
-    /// TETR.IO ? rank
     #[serde(rename = "z")]
     Z,
 }
@@ -61,6 +44,7 @@ pub enum UserRank {
 impl std::fmt::Display for UserRank {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            UserRank::XPlus => f.write_str("X+"),
             UserRank::X => f.write_str("X"),
             UserRank::U => f.write_str("U"),
             UserRank::SS => f.write_str("SS"),

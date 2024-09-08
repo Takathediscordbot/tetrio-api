@@ -52,7 +52,7 @@ use tetrio_api::{http::client, models::packet::Packet};
 
 #[tokio::main]
 async fn main() {
-    let user = client::fetch_user_info("takathedinosaur").await.expect("Couldn't fetch the CH.TETR.IO API to find the error! This could have been an error while parsing the data or while trying to send the HTTP request.");
+    let user = client::fetch_user_info("taka").await.expect("Couldn't fetch the CH.TETR.IO API to find the error! This could have been an error while parsing the data or while trying to send the HTTP request.");
 
     match user {
         Packet { data: Some(data), .. } => {

@@ -1,18 +1,14 @@
-use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
+use crate::models::common::APIstring;
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
-/// A user's distinguishment banner.
 pub struct UserDistinguishment {
-    /// The type of distinguishment banner.
     #[serde(rename = "type")]
-    pub distinguishment_type: Arc<str>,
-    /// Details shown on the banner
-    pub detail: Option<Arc<str>>,
-    /// The header of the banner
-    pub header: Option<Arc<str>>,
-    /// The footer of the banner
-    pub footer: Option<Arc<str>>
+    pub distinguishment_type: APIstring,
+    pub detail: Option<APIstring>,
+    pub header: Option<APIstring>,
+    pub footer: Option<APIstring>
 }
