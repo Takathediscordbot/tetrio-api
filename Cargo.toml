@@ -28,7 +28,7 @@ tower-util = "0.3.1"
 url = "2.5.2"
 
 [dev-dependencies]
-tokio = {version="1.25.0", features = ["macros", "rt-multi-thread"]}
+tokio = {version="1.43.0", features = ["macros", "rt-multi-thread"]}
 
 [features]
 in_memory_cache = ["moka"]
