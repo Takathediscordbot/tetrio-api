@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+/// A struct usually filled in with data directly sent by the ch.tetr.io API
+/// You *can* set values manually but I really couldn't explain the behavior to you.
 pub struct Prisecter {
     pub pri: f64,
     pub sec: f64,

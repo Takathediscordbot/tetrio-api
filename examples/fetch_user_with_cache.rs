@@ -6,7 +6,6 @@ async fn main() {
 
     let client = InMemoryReqwestClient::default();
     
-    // This returns an Arc because of cache
     let user = client.fetch_user_info("taka").await.expect("Couldn't fetch the CH.TETR.IO API to find the error! This could have been an error while parsing the data or while trying to send the HTTP request.");
 
     match &user {

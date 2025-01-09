@@ -34,4 +34,5 @@ tokio = {version="1.43.0", features = ["macros", "rt-multi-thread"]}
 in_memory_cache = ["moka"]
 reqwest_http_client = ["reqwest"]
 redis_cache = ["redis"]
+mock = []
 default = ["in_memory_cache", "reqwest_http_client", "redis_cache"]

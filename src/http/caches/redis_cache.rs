@@ -8,6 +8,7 @@ use crate::{http::error::Error, models::packet::{Packet, SuccessPacket}};
 
 use super::cache::CacheHandler;
 
+/// A cache implementation that uses a Redis instance to automatically remove the cache entries when their expiration date has passed.
 pub struct RedisCache<'a> {
     pub client: Cow<'a, redis::Client>
 }

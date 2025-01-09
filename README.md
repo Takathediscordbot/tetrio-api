@@ -39,39 +39,6 @@ You can also use a specific commit like so:
 tetrio-api = { "git" = "https://github.com/Takathediscordbot/tetrio-api", rev="64a0516" }
 ```
 
-### How to use
-
-###
-
-Fetching a user
-
-```rs
-use std::f64::NAN;
-
-use tetrio_api::{http::client, models::packet::Packet};
-
-#[tokio::main]
-async fn main() {
-    let user = client::fetch_user_info("taka").await.expect("Couldn't fetch the CH.TETR.IO API to find the error! This could have been an error while parsing the data or while trying to send the HTTP request.");
-
-    match user {
-        Packet { data: Some(data), .. } => {
-
-            println!("{} (id: {}): {}pps, {}apm {}vs", data.user.username, data.user.id, data.user.league.pps.unwrap_or(NAN), data.user.league.apm.unwrap_or(NAN), data.user.league.vs.unwrap_or(NAN));
-        },
-        Packet { success, error, .. } => {
-            if success {
-                eprintln!("The API didn't return an error but no data was found somehow!"); 
-                // According to the API documentation that is not a possible case.
-                unreachable!();
-            }
-
-            eprintln!("An error has occured while trying to fetch the user! {:?}", error)            
-        }
-    };
-}
-```
-
 ### Examples
 
 There are code examples in the [examples folder](https://github.com/Takathediscordbot/tetrio-api/tree/main/examples) of this git repository. 
@@ -87,18 +54,5 @@ To make sure the library functionalities are working before using it, you can ru
 ```bash
 cargo test
 ```
-
-However, there is a good chance running the tests fail because of rate limit,
-you can limit the number of threads running at the same time by using 
-
-```bash
-cargo test -- --test-threads=2
-```
-
-The tests will run significantly slower but should not fail due to rate limit. 
-You might also be able to put a higher number, and if the tests still don't work because of rate limit
-you can limit the threads to 1 to remove parallelism completely.
-
-
 
 

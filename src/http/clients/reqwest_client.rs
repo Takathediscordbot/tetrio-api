@@ -12,6 +12,7 @@ use crate::http::{cached_client::CachedClient, caches::{moka::MokaCache, noop_ca
 use super::http_client::HttpClient;
 
 
+/// A reqwest based http client
 pub struct ReqwestClient {
     client: reqwest::Client
 }
@@ -36,11 +37,13 @@ pub type UncachedReqwestClient = CachedClient<ReqwestClient, NoopCache>;
 pub type UncachedReqwestError = <UncachedReqwestClient as ErrorTrait>::Error;
 
 #[cfg(feature = "in_memory_cache")]
+/// A reqwest based http client using an in-memory cache
 pub type InMemoryReqwestClient = CachedClient<ReqwestClient, MokaCache>;
 #[cfg(feature = "in_memory_cache")]
 pub type InMemoryReqwestError = <InMemoryReqwestClient as ErrorTrait>::Error;
 
 #[cfg(feature = "redis_cache")]
+/// A reqwest based http client using a redis cache
 pub type RedisReqwestClient<'a> = CachedClient<ReqwestClient, RedisCache<'a>>;
 #[cfg(feature = "redis_cache")]
 pub type RedisReqwestError<'a> = <RedisReqwestClient<'a> as ErrorTrait>::Error;

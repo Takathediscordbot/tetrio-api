@@ -1,6 +1,6 @@
 #![cfg(feature = "reqwest_http_client")]
 #![cfg(feature = "in_memory_cache")]
-
+#![cfg(feature = "mock")]
 
 use std::fs;
 

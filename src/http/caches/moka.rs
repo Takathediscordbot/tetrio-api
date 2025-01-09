@@ -21,6 +21,7 @@ impl<K, T> Expiry<K, Arc<SuccessPacket<T>>> for CacheExpiration {
     }
 }
 
+/// A cache implementation that uses the moka crate to automatically remove the cache entries when their expiration date has passed.
 pub struct MokaCache {
     cache: Cache<String, Arc<SuccessPacket<serde_json::Value>>>,
 }
