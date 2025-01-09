@@ -55,12 +55,14 @@ fn to_packet<T: DeserializeOwned + Clone + Serialize>(data: T) -> Packet<T> {
     }
 }
 
-fn read_to_packet(path: &str) -> serde_json::Value {
+fn read_to_packet(path: &str) -> String {
     let data = fs::read_to_string(path).unwrap();
+    serde_json::to_string(&
     serde_json::to_value(to_packet::<Vec<serde_json::Value>>(
         serde_json::from_str(&data).unwrap(),
     ))
-    .unwrap()
+    .unwrap()).unwrap()
+    
 }
 
 #[test]
@@ -70,7 +72,7 @@ fn fetch_user_info() {
         let client = get_client();
 
         client
-            .cache_tetrio_api_result_if_not_present::<Vec<UserInfoPacket>>(path, None, read_to_packet(path))
+            .cache_tetrio_api_result_if_not_present::<Vec<UserInfoPacket>>(path, None, &read_to_packet(path))
             .await
             .expect("Couldn't parse user infos!");
     }
@@ -84,7 +86,7 @@ fn fetch_user_summary() {
         let client = get_client();
 
         client
-            .cache_tetrio_api_result_if_not_present::<Vec<AllSummariesPacket>>(path, None, read_to_packet(path))
+            .cache_tetrio_api_result_if_not_present::<Vec<AllSummariesPacket>>(path, None, &read_to_packet(path))
             .await
             .expect("Couldn't parse user summaries!");
 
@@ -92,7 +94,7 @@ fn fetch_user_summary() {
         let client = get_client();
 
         client
-            .cache_tetrio_api_result_if_not_present::<Vec<SprintSummaryPacket>>(path, None, read_to_packet(path))
+            .cache_tetrio_api_result_if_not_present::<Vec<SprintSummaryPacket>>(path, None, &read_to_packet(path))
             .await
             .expect("Couldn't parse user summaries!");
 
@@ -100,7 +102,7 @@ fn fetch_user_summary() {
         let client = get_client();
 
         client
-            .cache_tetrio_api_result_if_not_present::<Vec<BlitzSummaryPacket>>(path, None, read_to_packet(path))
+            .cache_tetrio_api_result_if_not_present::<Vec<BlitzSummaryPacket>>(path, None, &read_to_packet(path))
             .await
             .expect("Couldn't parse user summaries!");
 
@@ -108,7 +110,7 @@ fn fetch_user_summary() {
         let client = get_client();
 
         client
-            .cache_tetrio_api_result_if_not_present::<Vec<LeagueSummaryPacket>>(path, None, read_to_packet(path))
+            .cache_tetrio_api_result_if_not_present::<Vec<LeagueSummaryPacket>>(path, None, &read_to_packet(path))
             .await
             .expect("Couldn't parse user summaries!");
 
@@ -116,7 +118,7 @@ fn fetch_user_summary() {
         let client = get_client();
 
         client
-            .cache_tetrio_api_result_if_not_present::<Vec<ZenSummaryPacket>>(path, None, read_to_packet(path))
+            .cache_tetrio_api_result_if_not_present::<Vec<ZenSummaryPacket>>(path, None, &read_to_packet(path))
             .await
             .expect("Couldn't parse user summaries!");
 
@@ -124,7 +126,7 @@ fn fetch_user_summary() {
         let client = get_client();
 
         client
-            .cache_tetrio_api_result_if_not_present::<Vec<ZenithSummaryPacket>>(path, None, read_to_packet(path))
+            .cache_tetrio_api_result_if_not_present::<Vec<ZenithSummaryPacket>>(path, None, &read_to_packet(path))
             .await
             .expect("Couldn't parse user summaries!");
 
@@ -132,7 +134,7 @@ fn fetch_user_summary() {
         let client = get_client();
 
         client
-            .cache_tetrio_api_result_if_not_present::<Vec<ZenithExSummaryPacket>>(path, None, read_to_packet(path))
+            .cache_tetrio_api_result_if_not_present::<Vec<ZenithExSummaryPacket>>(path, None, &read_to_packet(path))
             .await
             .expect("Couldn't parse user summaries!");
     }
@@ -149,9 +151,9 @@ fn fetch_user_records() {
             let client = get_client();
             eprintln!("Parsing {record_type}");
             client
-                .cache_tetrio_api_result_if_not_present::<Vec<T>>(&file, None, read_to_packet(&file))
+                .cache_tetrio_api_result_if_not_present::<Vec<T>>(&file, None, &read_to_packet(&file))
                 .await
-                .expect("Couldn't parse user summaries!");
+                .expect(&format!("Couldn't parse user summaries! of type {record_type}"));
         }
     }
 
@@ -174,7 +176,7 @@ fn fetch_league_leaderboard() {
         let client = get_client();
 
         client
-            .cache_tetrio_api_result_if_not_present::<Vec<Vec<tetrio_api::models::users::user_leaderboard::LeaderboardUser>>>(path, None, read_to_packet(path))
+            .cache_tetrio_api_result_if_not_present::<Vec<Vec<tetrio_api::models::users::user_leaderboard::LeaderboardUser>>>(path, None, &read_to_packet(path))
             .await
             .expect("Couldn't parse user summaries!");
     }

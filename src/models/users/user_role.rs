@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub enum UserRole {
+
     #[serde(rename = "anon")]
     Anon,
     #[serde(rename = "user")]
@@ -21,4 +21,6 @@ pub enum UserRole {
     SysOp,
     #[serde(rename = "hidden")]
     Hidden,
+    #[serde(untagged)]
+    Unknown(String)
 }

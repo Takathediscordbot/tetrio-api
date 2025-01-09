@@ -1,11 +1,13 @@
 use serde::{Deserialize, Serialize};
-
+use std::collections::HashMap;
 use crate::{http::parameters::value_bound_query::Prisecter, models::{common::{APIfloat, APIint, APIstring}, packet::Packet}};
 
 use super::user_rank::UserRank;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LeaderboardUser {
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     /* The user's internal ID. */
     pub _id: APIstring,
     /* The season ID. */
@@ -46,6 +48,8 @@ pub struct LeaderboardUser {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct UserHistoryLeaderboard {
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub entries: Vec<LeaderboardUser>
 }
 

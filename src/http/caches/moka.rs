@@ -67,7 +67,7 @@ impl<ErrorT: std::error::Error + Sync + Send + Debug> CacheHandler<ErrorT> for M
         self.cache.insert(cache_key.to_string(), Arc::new(SuccessPacket {
             success,
             cache,
-            data: serde_json::to_value(data).map_err(|err| Error::ConversionError { error: err })?
+            data: serde_json::to_value(data).map_err(|err| Error::SerdeError(err))?
         })).await;
 
         Ok(())

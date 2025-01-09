@@ -84,17 +84,16 @@ impl<HttpClientImpl: HttpClient + Send + Sync, Cache: CacheHandler<HttpClientImp
 
    
     pub(crate) async fn parse_body<T: DeserializeOwned>(body: Bytes) -> Result<T, <Self as ErrorTrait>::Error> {
+        let jd = &mut serde_json::Deserializer::from_reader(body.clone().reader());
 
-        Ok(serde_json::from_reader::<_, T>(body.clone().reader()).map_err(|err| {
-            let body = String::from_utf8(body.to_vec()).ok().map(|body| {
-                (body.chars().skip(err.column().checked_sub(40).unwrap_or(0)).take(40).collect::<String>(), body)
-            });
+        let result: Result<T, _> = serde_path_to_error::deserialize(jd);
 
-            match body {
-                Some((surroundings, body)) => Error::ParsingError { error: err, surroundings: Some(surroundings), body: Some(body) },
-                None => Error::ParsingError { error: err, surroundings: None, body: None }
+        match result {
+            Ok(v) => Ok(v),
+            Err(err) => {
+                Err(Error::ParsingError(err))
             }
-        })?)
+        }
     }
 
     pub fn make_url<T: Display>(href: &str, query_params: &[[T; 2]]) -> String {
@@ -180,21 +179,25 @@ impl<HttpClientImpl: HttpClient + Send + Sync, Cache: CacheHandler<HttpClientImp
         }), |value| Either::Right(async move { Ok(value) })).await
     }
 
-    pub async fn cache_tetrio_api_result_if_not_present<T: DeserializeOwned + Serialize + Clone + Send + Sync>(&self, route: impl Display, session_id: Option<&str>, packet: serde_json::Value) -> Result<Packet<T>, <Self as ErrorTrait>::Error> {
+    pub async fn cache_tetrio_api_result_if_not_present<T: DeserializeOwned + Serialize + Clone + Send + Sync>(&self, route: impl Display, session_id: Option<&str>, packet: &str) -> Result<Packet<T>, <Self as ErrorTrait>::Error> {
         let url = Self::get_url(route);
         let cache_key = Self::get_cache_key(&url, &session_id);
-    
         let response = self.cache_handler.try_get_cache(&cache_key).await?;
         response.map_or_else(|| Either::Left(async {
-            let packet = serde_json::from_value::<Packet<T>>(packet).map_err(|e| Error::ConversionError { error: e });
-            
+            let deserializer = &mut serde_json::Deserializer::from_str(packet);
+
+            let result: Result<Packet<T>, _> = serde_path_to_error::deserialize(deserializer).map_err(
+                Error::ConversionError
+            );
+
+
             // ignore error because we don't care if it's not cached
-            let _ = match &packet {
+            let _ = match &result {
                 Ok(value) => {self.cache_value_if_success(cache_key, value.clone()).await},
-                _ => { return packet; }
+                _ => { return result }
             };
 
-            return packet;
+            return result;
         }), |value| Either::Right(async move { Ok(value) })).await
     }
 

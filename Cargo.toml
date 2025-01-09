@@ -22,6 +22,7 @@ redis = {version = "0.26.1", optional = true}
 reqwest = {version = "0.12.7", features = ["json"], optional = true}
 serde = {version = "1.0.199", features = ["derive", "rc"] }
 serde_json = "1.0.93"
+serde_path_to_error = "0.1.16"
 tower = {version = "0.5.0", features = ["util", "limit"]}
 tower-util = "0.3.1"
 url = "2.5.2"

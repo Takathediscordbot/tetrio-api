@@ -4,21 +4,25 @@
 
 
 use serde::{Deserialize, Serialize};
-
+use std::collections::HashMap;
 
 use crate::{http::parameters::{personal_user_records::GameMode, value_bound_query::Prisecter}, models::common::{APIArray, APIfloat, APIint, APIintarray, APIsmallint, APIstring}};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct ZenithAggregateStats {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub apm: APIfloat,
     pub pps: APIfloat,
     pub vsscore: APIfloat
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct ZenithTime {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub start: APIint,
     pub zero: bool,
     pub locked: bool,
@@ -27,8 +31,10 @@ pub struct ZenithTime {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct ZenithClears {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub singles: APIsmallint,
     pub doubles: APIsmallint,
     pub triples: APIsmallint,
@@ -49,8 +55,10 @@ pub struct ZenithClears {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct ZenithGarbage {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub sent: APIsmallint,
     pub sent_nomult: Option<APIsmallint>,
     pub maxspike: Option<APIsmallint>,
@@ -61,16 +69,20 @@ pub struct ZenithGarbage {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct ZenithFinesse {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub combo: APIsmallint,
     pub faults:  APIsmallint,
     pub perfectpieces:  APIsmallint
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct ZenithZenith {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub altitude: APIfloat,
     pub rank: APIfloat,
     pub peakrank: APIfloat,
@@ -84,12 +96,16 @@ pub struct ZenithZenith {
     pub revives_total: APIint,
     pub speedrun: bool,
     pub speedrun_seen: bool,
-    pub splits: APIintarray
+    pub splits: APIintarray,
+    #[serde(rename="revivesMaxOfBoth")]
+    pub revives_max_of_both: Option<APIint>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct ZenithStats {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub seed: Option<APIfloat>,
     pub lines: APIint,
     pub level_lines: APIint,
@@ -122,8 +138,10 @@ pub struct ZenithStats {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct ZenithResults {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub aggregatestats: ZenithAggregateStats,
     pub stats: ZenithStats,
     pub gameoverreason: APIstring
@@ -131,8 +149,10 @@ pub struct ZenithResults {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct ZenithRecordUser {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub id: APIstring,
     pub username: APIstring,
     pub avatar_revision: Option<APIint>,
@@ -142,21 +162,27 @@ pub struct ZenithRecordUser {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct ZenithExtrasZenith {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub mods: APIArray<APIstring>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct ZenithExtras {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub zenith: ZenithExtrasZenith
 }
 
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct ZenithRecord {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     #[serde(rename = "_id")]
     pub id: APIstring,
     pub replayid: APIstring,

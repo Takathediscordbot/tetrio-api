@@ -1,8 +1,7 @@
-use std::{collections::HashMap, fs, future::Future};
+use std::{fs, future::Future};
 
 use futures::future::join_all;
-use redis::Value;
-use serde::Serialize;
+
 use serde_json::json;
 use tetrio_api::{http::{cached_client::CachedClient, caches::moka::MokaCache, clients::reqwest_client::{InMemoryReqwestClient, InMemoryReqwestError, ReqwestClient}, parameters::value_bound_query::{Prisecter, ValueBoundQuery}}, models::packet::Packet};
 
@@ -239,94 +238,94 @@ pub async fn run_for_all_users<ReturnType: Clone, U: Future<Output = Result<Pack
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = InMemoryReqwestClient::default();
 
-    // let user_info_packets = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}"), None)).await;
+    let user_info_packets = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}"), None)).await;
 
 
 
-    // let ids = user_info_packets.iter().map(|packet| {
-    //      let user = packet.data.as_ref().unwrap();
-    //     return [user.get("_id").cloned().unwrap().as_str().map(|v| v.to_string()).unwrap(), user.get("username").cloned().unwrap().as_str().map(|v| v.to_string()).unwrap()]
-    // }).collect::<Vec<_>>();
+    let ids = user_info_packets.iter().map(|packet| {
+         let user = packet.data.as_ref().unwrap();
+        return [user.get("_id").cloned().unwrap().as_str().map(|v| v.to_string()).unwrap(), user.get("username").cloned().unwrap().as_str().map(|v| v.to_string()).unwrap()]
+    }).collect::<Vec<_>>();
 
-    // let user_info_packets = user_infos.iter().map(|packet| {
-    //     return packet
-    // }).collect::<Vec<_>>();
+    let user_info_packets = user_info_packets.iter().map(|packet| {
+        return packet
+    }).collect::<Vec<_>>();
 
-    // fs::write("./tetrio_users_ids.json", serde_json::to_string_pretty(&ids)?)?;
-    // fs::write("./tetrio_users_infos.json", serde_json::to_string_pretty(&user_info_packets)?)?;
+    fs::write("./tetrio_users_ids.json", serde_json::to_string_pretty(&ids)?)?;
+    fs::write("./tetrio_users_infos.json", serde_json::to_string_pretty(&user_info_packets)?)?;
 
     // User Summaries
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/summaries"), None)).await;
-    // fs::write("./tetrio_users_all_summaries.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/summaries"), None)).await;
+    fs::write("./tetrio_users_all_summaries.json", serde_json::to_string_pretty(&data)?)?;
     
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/summaries/40l"), None)).await;
-    // fs::write("./tetrio_users_40l_summaries.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/summaries/40l"), None)).await;
+    fs::write("./tetrio_users_40l_summaries.json", serde_json::to_string_pretty(&data)?)?;
 
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/summaries/blitz"), None)).await;
-    // fs::write("./tetrio_users_blitz_summaries.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/summaries/blitz"), None)).await;
+    fs::write("./tetrio_users_blitz_summaries.json", serde_json::to_string_pretty(&data)?)?;
     
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/summaries/zenith"), None)).await;
-    // fs::write("./tetrio_users_zenith_summaries.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/summaries/zenith"), None)).await;
+    fs::write("./tetrio_users_zenith_summaries.json", serde_json::to_string_pretty(&data)?)?;
 
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/summaries/zenithex"), None)).await;
-    // fs::write("./tetrio_users_zenithex_summaries.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/summaries/zenithex"), None)).await;
+    fs::write("./tetrio_users_zenithex_summaries.json", serde_json::to_string_pretty(&data)?)?;
 
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/summaries/league"), None)).await;
-    // fs::write("./tetrio_users_league_summaries.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/summaries/league"), None)).await;
+    fs::write("./tetrio_users_league_summaries.json", serde_json::to_string_pretty(&data)?)?;
 
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/summaries/zen"), None)).await;
-    // fs::write("./tetrio_users_zen_summaries.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/summaries/zen"), None)).await;
+    fs::write("./tetrio_users_zen_summaries.json", serde_json::to_string_pretty(&data)?)?;
 
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/summaries/achievements"), None)).await;
-    // fs::write("./tetrio_users_achievements_summaries.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/summaries/achievements"), None)).await;
+    fs::write("./tetrio_users_achievements_summaries.json", serde_json::to_string_pretty(&data)?)?;
 
-    // // User recent personal records    
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/40l/recent"), None)).await;
-    // fs::write("./tetrio_users_40l_records_recent.json", serde_json::to_string_pretty(&data)?)?;
+    // User recent personal records    
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/40l/recent"), None)).await;
+    fs::write("./tetrio_users_40l_records_recent.json", serde_json::to_string_pretty(&data)?)?;
 
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/blitz/recent"), None)).await;
-    // fs::write("./tetrio_users_blitz_records_recent.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/blitz/recent"), None)).await;
+    fs::write("./tetrio_users_blitz_records_recent.json", serde_json::to_string_pretty(&data)?)?;
     
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/zenith/recent"), None)).await;
-    // fs::write("./tetrio_users_zenith_records_recent.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/zenith/recent"), None)).await;
+    fs::write("./tetrio_users_zenith_records_recent.json", serde_json::to_string_pretty(&data)?)?;
 
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/zenithex/recent"), None)).await;
-    // fs::write("./tetrio_users_zenithex_records_recent.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/zenithex/recent"), None)).await;
+    fs::write("./tetrio_users_zenithex_records_recent.json", serde_json::to_string_pretty(&data)?)?;
 
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/league/recent"), None)).await;
-    // fs::write("./tetrio_users_league_records_recent.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/league/recent"), None)).await;
+    fs::write("./tetrio_users_league_records_recent.json", serde_json::to_string_pretty(&data)?)?;
 
-    // // User top personal records    
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/40l/top"), None)).await;
-    // fs::write("./tetrio_users_40l_records_top.json", serde_json::to_string_pretty(&data)?)?;
+    // User top personal records    
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/40l/top"), None)).await;
+    fs::write("./tetrio_users_40l_records_top.json", serde_json::to_string_pretty(&data)?)?;
 
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/blitz/top"), None)).await;
-    // fs::write("./tetrio_users_blitz_records_top.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/blitz/top"), None)).await;
+    fs::write("./tetrio_users_blitz_records_top.json", serde_json::to_string_pretty(&data)?)?;
     
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/zenith/top"), None)).await;
-    // fs::write("./tetrio_users_zenith_records_top.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/zenith/top"), None)).await;
+    fs::write("./tetrio_users_zenith_records_top.json", serde_json::to_string_pretty(&data)?)?;
 
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/zenithex/top"), None)).await;
-    // fs::write("./tetrio_users_zenithex_records_top.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/zenithex/top"), None)).await;
+    fs::write("./tetrio_users_zenithex_records_top.json", serde_json::to_string_pretty(&data)?)?;
 
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/league/top"), None)).await;
-    // fs::write("./tetrio_users_league_records_top.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/league/top"), None)).await;
+    fs::write("./tetrio_users_league_records_top.json", serde_json::to_string_pretty(&data)?)?;
 
-    // // User top personal records    
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/40l/progression"), None)).await;
-    // fs::write("./tetrio_users_40l_records_progression.json", serde_json::to_string_pretty(&data)?)?;
+    // User top personal records    
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/40l/progression"), None)).await;
+    fs::write("./tetrio_users_40l_records_progression.json", serde_json::to_string_pretty(&data)?)?;
 
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/blitz/progression"), None)).await;
-    // fs::write("./tetrio_users_blitz_records_progression.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/blitz/progression"), None)).await;
+    fs::write("./tetrio_users_blitz_records_progression.json", serde_json::to_string_pretty(&data)?)?;
     
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/zenith/progression"), None)).await;
-    // fs::write("./tetrio_users_zenith_records_progression.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/zenith/progression"), None)).await;
+    fs::write("./tetrio_users_zenith_records_progression.json", serde_json::to_string_pretty(&data)?)?;
 
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/zenithex/progression"), None)).await;
-    // fs::write("./tetrio_users_zenithex_records_progression.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/zenithex/progression"), None)).await;
+    fs::write("./tetrio_users_zenithex_records_progression.json", serde_json::to_string_pretty(&data)?)?;
 
-    // let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/league/progression"), None)).await;
-    // fs::write("./tetrio_users_league_records_progression.json", serde_json::to_string_pretty(&data)?)?;
+    let data = run_for_all_users(|user| client.make_tetrio_api_request::<serde_json::Value>(format!("users/{user}/records/league/progression"), None)).await;
+    fs::write("./tetrio_users_league_records_progression.json", serde_json::to_string_pretty(&data)?)?;
 
     let mut query = ValueBoundQuery::NotBound { limit: Some(100), country: None, };
     let session_id = "X_TEST_BEAN_BLASTER";

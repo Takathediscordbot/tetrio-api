@@ -5,8 +5,10 @@ use serde::{Deserialize, Serialize};
 use crate::models::{common::{APIfloat, APIint, APIstring}, users::user_rank::UserRank};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct LeagueSummaryPast {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     /* The season ID. */
     pub season: APIstring,
     /* The username the user had at the time. */
@@ -42,8 +44,10 @@ pub struct LeagueSummaryPast {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct LeagueSummary {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     /* The amount of TETRA LEAGUE games played by this user. */
     pub gamesplayed: Option<APIint>,
     /* The amount of TETRA LEAGUE games won by this user. */

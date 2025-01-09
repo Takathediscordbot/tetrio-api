@@ -3,6 +3,7 @@ use crate::models::{common::APIstring, packet::Packet};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct LatestNews {
+    
     #[serde(rename = "_id")]
     pub id: APIstring,
     pub stream: APIstring,

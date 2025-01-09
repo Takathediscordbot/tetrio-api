@@ -5,20 +5,24 @@
 
 use serde::{Deserialize, Serialize};
 
-
+use std::collections::HashMap;
 use crate::{http::parameters::{personal_user_records::GameMode, value_bound_query::Prisecter}, models::common::{APIfloat, APIint, APIintarray, APIsmallint, APIstring}};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct BlitzAggregateStats {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub apm: APIfloat,
     pub pps: APIfloat,
     pub vsscore: APIfloat
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct BlitzTime {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub start: APIint,
     pub zero: bool,
     pub locked: bool,
@@ -27,8 +31,10 @@ pub struct BlitzTime {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct BlitzClears {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub singles: APIsmallint,
     pub doubles: APIsmallint,
     pub triples: APIsmallint,
@@ -49,8 +55,10 @@ pub struct BlitzClears {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct BlitzGarbage {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub sent: APIsmallint,
     pub sent_nomult: Option<APIsmallint>,
     pub maxspike: Option<APIsmallint>,
@@ -61,16 +69,20 @@ pub struct BlitzGarbage {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct BlitzFinesse {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub combo: APIsmallint,
     pub faults:  APIsmallint,
     pub perfectpieces:  APIsmallint
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct BlitzZenith {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub altitude: APIint,
     pub rank: APIint,
     pub peakrank: APIint,
@@ -84,12 +96,16 @@ pub struct BlitzZenith {
     pub revives_total: APIint,
     pub speedrun: bool,
     pub speedrun_seen: bool,
-    pub splits: APIintarray
+    pub splits: APIintarray,
+    #[serde(rename="revivesMaxOfBoth")]
+    pub revives_max_of_both: Option<APIint>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct BlitzStats {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub seed: Option<APIfloat>,
     pub lines: APIint,
     pub level_lines: APIint,
@@ -121,8 +137,10 @@ pub struct BlitzStats {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct BlitzResults {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub aggregatestats: BlitzAggregateStats,
     pub stats: BlitzStats,
     pub gameoverreason: APIstring
@@ -130,8 +148,10 @@ pub struct BlitzResults {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct BlitzRecordUser {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub id: APIstring,
     pub username: APIstring,
     pub avatar_revision: Option<APIint>,
@@ -141,13 +161,19 @@ pub struct BlitzRecordUser {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
-pub struct BlitzExtras {}
+pub struct BlitzExtras {
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
+}
+
+
 
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct BlitzRecord {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     #[serde(rename = "_id")]
     pub id: APIstring,
     pub replayid: APIstring,

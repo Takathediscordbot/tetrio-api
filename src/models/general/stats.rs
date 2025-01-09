@@ -1,9 +1,13 @@
+use std::collections::HashMap;
+
 use crate::models::{common::{APIfloat, APIint}, packet::Packet};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct Stats {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub usercount: APIint,
     pub usercount_delta: APIfloat,
     pub anoncount: APIint,

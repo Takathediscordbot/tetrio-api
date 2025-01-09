@@ -1,10 +1,13 @@
 use serde::{Deserialize, Serialize};
 
 use crate::models::common::APIint;
+use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct UserArCounts {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     #[serde(rename="1")]
     bronze: Option<APIint>,
     #[serde(rename="2")]

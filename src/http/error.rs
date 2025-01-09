@@ -8,8 +8,9 @@ pub enum Error<HttpError: Debug + Send + Sync, CachingError: Debug + Send + Sync
     CacheConversionError(serde_json::Error),
     RequestParsingError(http::Error),
     InvalidHeaderValue(http::header::InvalidHeaderValue),
-    ParsingError { error: serde_json::Error, surroundings: Option<String>, body: Option<String> },
-    ConversionError { error: serde_json::Error },
+    ParsingError(serde_path_to_error::Error<serde_json::Error>),
+    ConversionError(serde_path_to_error::Error<serde_json::Error>),
+    SerdeError(serde_json::Error),
 }
 
 
@@ -20,12 +21,13 @@ impl<HttpError: StdError + Debug + Send + Sync, CachingError: StdError + Debug +
             Error::InvalidHeaderValue(error) => write!(f, "InvalidHeaderValue: {error}"),
             Error::RequestParsingError(error) => write!(f, "RequestParsingError: {}", error),
             Error::CacheConversionError(error) => write!(f, "Couldn't convert cache entry: {}", error),
-            Error::ParsingError { error, surroundings: Some(body), body: _ } => write!(f, "ParsingError: {}\nBody: {}", error, body),
-            Error::ParsingError { error, surroundings: None, body: _ } => write!(f, "ParsingError: {}", error),
-            Error::ConversionError { error } => write!(f, "Couldn't convert value to json ({})", error),
+            Error::ParsingError(error) => {
+                write!(f, "ParsingError: Path: {}, error: {}", error.path(), error.inner())
+            },
+            Error::ConversionError(error)=> write!(f, "Couldn't convert cache entry: path: {}, error: {}", error.path(), error.inner()),
             Error::HttpError(error) => write!(f, "HttpError: {error}"),
             Error::CachingError(error) => write!(f, "CachingError: {error}"),
-
+            Error::SerdeError(error) => write!(f, "SerdeError: {error}"),
         }
     }
 }

@@ -5,6 +5,7 @@ use crate::models::packet::Packet;
 use crate::models::users::user_badge::UserBadge;
 use crate::models::users::user_connections::UserConnections;
 use crate::models::users::user_distinguishment::UserDistinguishment;
+use std::collections::HashMap;
 use crate::models::users::user_role::UserRole;
 
 use super::user_achievements::UserArCounts;
@@ -34,8 +35,10 @@ use super::user_achievements::UserArCounts;
 // }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
 pub struct UserInfo {
+    
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     #[serde(rename = "_id")]
     pub id: APIstring,
     pub username: APIstring,

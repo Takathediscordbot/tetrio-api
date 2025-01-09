@@ -4,7 +4,7 @@ pub mod zenith_record;
 pub mod zenithex_record;
 pub mod league_record;
 
-
+use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
@@ -18,8 +18,10 @@ pub use self::zenithex_record::ZenithExRecord;
 pub use self::league_record::LeagueRecord;
 
 #[derive(Clone, Deserialize, Serialize, Debug)]
-#[serde(deny_unknown_fields)]
 pub struct PersonalUserRecords<T> {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub entries: APIArray<T>,
 }
 

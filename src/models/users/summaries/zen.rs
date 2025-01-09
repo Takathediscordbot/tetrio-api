@@ -2,12 +2,15 @@ use serde::{Deserialize, Serialize};
 
 use crate::models::common::{APIfloat, APIint};
 
+use std::collections::HashMap;
 
 
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct ZenSummary {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub level: APIint,
     pub score: APIfloat
 }

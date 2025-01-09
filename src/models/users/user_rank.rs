@@ -2,7 +2,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
-#[serde(deny_unknown_fields)]
 pub enum UserRank {
     #[serde(rename = "x+")]
     XPlus,
@@ -39,6 +38,8 @@ pub enum UserRank {
     D,
     #[serde(rename = "z")]
     Z,
+    #[serde(untagged)]
+    Unknown(String)
 }
 
 impl std::fmt::Display for UserRank {
@@ -63,6 +64,7 @@ impl std::fmt::Display for UserRank {
             UserRank::DPlus => f.write_str("D+"),
             UserRank::D => f.write_str("D"),
             UserRank::Z => f.write_str("Z"),
+            UserRank::Unknown(rank) => f.write_str(&rank)
         }
     }
 }

@@ -2,23 +2,27 @@
 
 */
 
-
+use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 
 use crate::{http::parameters::{personal_user_records::GameMode, value_bound_query::Prisecter}, models::common::{APIfloat, APIint, APIintarray, APIsmallint, APIstring}};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct SprintAggregateStats {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub apm: APIfloat,
     pub pps: APIfloat,
     pub vsscore: APIfloat
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct SprintTime {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub start: APIint,
     pub zero: bool,
     pub locked: bool,
@@ -27,8 +31,10 @@ pub struct SprintTime {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct SprintClears {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub singles: APIsmallint,
     pub doubles: APIsmallint,
     pub triples: APIsmallint,
@@ -49,8 +55,10 @@ pub struct SprintClears {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct SprintGarbage {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub sent: APIsmallint,
     pub sent_nomult: Option<APIsmallint>,
     pub maxspike: Option<APIsmallint>,
@@ -61,16 +69,20 @@ pub struct SprintGarbage {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct SprintFinesse {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub combo: APIsmallint,
     pub faults:  APIsmallint,
     pub perfectpieces:  APIsmallint
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct SprintZenith {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub altitude: APIint,
     pub rank: APIint,
     pub peakrank: APIint,
@@ -84,12 +96,16 @@ pub struct SprintZenith {
     pub revives_total: APIint,
     pub speedrun: bool,
     pub speedrun_seen: bool,
-    pub splits: APIintarray
+    pub splits: APIintarray,
+    #[serde(rename="revivesMaxOfBoth")]
+    pub revives_max_of_both: Option<APIint>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct SprintStats {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub seed: Option<APIfloat>,
     pub lines: APIint,
     pub level_lines: APIint,
@@ -121,8 +137,10 @@ pub struct SprintStats {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct SprintResults {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub aggregatestats: SprintAggregateStats,
     pub stats: SprintStats,
     pub gameoverreason: APIstring
@@ -130,8 +148,10 @@ pub struct SprintResults {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct SprintRecordUser {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub id: APIstring,
     pub username: APIstring,
     pub avatar_revision: Option<APIint>,
@@ -141,13 +161,19 @@ pub struct SprintRecordUser {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
-pub struct SprintExtras {}
+pub struct SprintExtras {
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
+}
+
+
 
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct SprintRecord {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     #[serde(rename = "_id")]
     pub id: APIstring,
     pub replayid: APIstring,

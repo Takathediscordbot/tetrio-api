@@ -1,12 +1,15 @@
 use serde::{Deserialize, Serialize};
 
 use crate::models::common::{APIfloat, APIint, APIstring};
+use std::collections::HashMap;
 
 
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(deny_unknown_fields)]
 pub struct Achievement {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     #[serde(rename = "_id")]
     pub id: Option<APIstring>,
     /* The Achievement ID, for every type of achievement. */
@@ -48,6 +51,9 @@ pub struct Achievement {
     pub n: Option<APIstring>,
     pub nolb: bool,
     pub stub: Option<bool>,
+    pub disabled: Option<bool>,
+    pub event: Option<APIstring>,
+    pub event_past: Option<bool>,
 
 }
 

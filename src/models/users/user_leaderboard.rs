@@ -4,10 +4,13 @@ use serde::{Deserialize, Serialize};
 use crate::{http::parameters::value_bound_query::Prisecter, models::{common::{APIfloat, APIint, APIstring}, packet::Packet}};
 
 use super::{user_achievements::UserArCounts, user_rank::UserRank, user_role::UserRole};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
 pub struct LeaderboardUserLeague {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     /* The amount of TETRA LEAGUE games played by this user. */
     pub gamesplayed: APIint,
     /* The amount of TETRA LEAGUE games won by this user. */
@@ -25,18 +28,20 @@ pub struct LeaderboardUserLeague {
     /* This user's Glicko-2 Rating Deviation. */
     pub rd: APIfloat,
     /* This user's average APM (attack per minute) over the last 10 games. */
-    pub apm: APIfloat,
+    pub apm: Option<APIfloat>,
     /* This user's average PPS (pieces per second) over the last 10 games. */
-    pub pps: APIfloat,
+    pub pps: Option<APIfloat>,
     /* This user's average VS (versus score) over the last 10 games. */
-    pub vs: APIfloat,
+    pub vs: Option<APIfloat>,
     /* Whether this user's RD is rising (has not played in the last week). */
     pub decaying: bool,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
 pub struct LeaderboardUser {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     #[serde(rename = "_id")]
     pub id: APIstring,
     pub username: APIstring,
@@ -56,8 +61,10 @@ pub struct LeaderboardUser {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
 pub struct LeaderboardObject {
+
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
     pub entries: Vec<LeaderboardUser>
 }
 

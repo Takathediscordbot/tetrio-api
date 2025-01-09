@@ -26,6 +26,8 @@ pub struct LeagueRank {
     pub vs: Option<APIfloat>,
     /* The amount of players with this rank. */
     pub count: APIint,
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -45,6 +47,9 @@ pub struct LeagueRanks {
     pub t: APIstring,
     /* The data point: */
     pub data: LeagueRanksData,
+    
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
 }
 
 pub type LeagueRanksPacket = Packet<LeagueRanks>;

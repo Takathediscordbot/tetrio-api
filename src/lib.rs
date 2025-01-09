@@ -1,5 +1,4 @@
 
-use std::time::Duration;
 
 /// The module which actually lets you interact with the TETR.IO api
 /// You will find in here both a classic HTTP client which does not manage the cache 

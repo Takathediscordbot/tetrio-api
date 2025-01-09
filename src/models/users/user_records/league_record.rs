@@ -22,19 +22,23 @@ pub struct LeagueLeaderboardStats {
     pub altitude: APIfloat,
     pub rank: APIfloat,
     pub targetingfactor: APIfloat,
-    pub targetinggrace: APIfloat
+    pub targetinggrace: APIfloat,
+    #[serde(rename="revivesMaxOfBoth")]
+    pub revives_max_of_both: Option<APIint>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 
 pub struct ShadowedBy {
-
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 
 pub struct Shadows {
-
+    #[serde(flatten)]
+    pub ignored_fields: HashMap<String, serde_json::Value>,
 }
 
 
@@ -73,6 +77,8 @@ pub struct LeagueRoundStats {
     pub rank: APIfloat,
     pub targetingfactor: APIfloat,
     pub targetinggrace: APIfloat,
+    #[serde(rename="revivesMaxOfBoth")]
+    pub revives_max_of_both: Option<APIint>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
